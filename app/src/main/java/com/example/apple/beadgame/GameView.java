@@ -2,6 +2,7 @@ package com.example.apple.beadgame;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.AttributeSet;
@@ -24,7 +25,6 @@ import java.util.Map;
 /**
  * Created by apple on 2018/6/8.
  */
-
 public class GameView extends SurfaceView implements SurfaceHolder.Callback{
 
     private SurfaceHolder holder;
@@ -32,15 +32,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     private int size_x=6,size_y=6;
 
     private Bead beads[][];
-    private BackGround backGround[][];
     int m,n;
-    private int width,height;
-    int BitmapSize;
-    boolean TochFlag=true,GameFlag = true;
-
+    int width,height,BitmapSize;
+    boolean TochFlag=true,GameFlag = true,isClear = true;
+    Bitmap b;
     GameManagerWithCounter gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
-
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,25 +45,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         holder.addCallback(this);
 
         beads = new Bead[size_x][size_y];
-
         Log.i("list",list.size()+"");
     }
-
-
     @Override
     public void surfaceCreated(final SurfaceHolder holder) {
+        b = BitmapFactory.decodeResource(getResources(),R.drawable.blue_cat);
+        b = Bitmap.createScaledBitmap(b,100,100,false);
+
         CreateBead();
         DrawMoveBead();
-
     }
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
     }
 
     @Override
@@ -83,10 +77,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         int x = (int)event.getX();
         int y = (int)event.getY();
 
-
         int row = (int)(x / BitmapSize);//計算行列
         int col = (int)(height - y)/BitmapSize;//計算行列
-
 
         if(GameFlag && TochFlag)
             switch(event.getAction())
@@ -96,7 +88,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                         break;
                     else {
                         Log.i("ACTION_DOWN", "ACTION_DOWN" + beads[row][col].getKind());
-
                         m = row;
                         n = col;
                         return true;
@@ -112,7 +103,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
 
                         if( m+1 == row | m-1 == row | n+1 == col | n-1 == col)
                         {
-
                             Bitmap temp = beads[m][n].bitmap;
                             beads[m][n].bitmap = beads[row][col].bitmap;
                             beads[row][col].bitmap = temp;
@@ -130,7 +120,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                 case MotionEvent.ACTION_UP:
                     Log.i("ACTION_UP", "ACTION_UP");
                     TochFlag = false;
-                    SearchBead2();
+                    SearchBead();
                     new Thread(){
                         @Override
                         public void run() {
@@ -138,7 +128,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                             while ( i >0)
                                 try {
                                     Log.i("time",i+"");
-                                    Thread.sleep(1000);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -149,9 +139,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                             Log.i("TochFlag ",TochFlag+"");
                         }
                     }.start();
-
-
-                    //Score.Count(juJu,size_x);
                     return true;
                 default:
                     Log.i(event.getAction()+"",event.getAction()+"");
@@ -160,8 +147,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         return false;
     }
 
-
-    private void SearchBead2(){
+    private void SearchBead(){
         int list_index;
         int map_index;
 
@@ -170,7 +156,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         list.add(new ArrayList<List<Map<String, Integer>>>());
         list.add(new ArrayList<List<Map<String, Integer>>>());
         list.add(new ArrayList<List<Map<String, Integer>>>());
-
 
         for(int i=0;i<size_x;i++)
             for(int j=0;j<size_y;j++){
@@ -214,7 +199,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                         list.get(beads[i][j].kind).get(list_index).get(map_index).put("x",i);
                         list.get(beads[i][j].kind).get(list_index).get(map_index).put("y",j-1);
                         beads[i][j-1].check = true;
-
 
                         list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                         map_index++;
@@ -267,7 +251,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                         list.get(beads[i][j].kind).get(list_index).get(map_index).put("y",j);
                         beads[i-1][j].check = true;
 
-
                         list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                         map_index++;
 
@@ -290,11 +273,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                     }
                     try {
                         DrawBead();
-                        Thread.sleep(500);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     SummonCat();
+                    SummonCat();
+                    SummonCat();
+
                 }
             }
             while (list.size() > 0)
@@ -321,14 +307,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
             }
         }
         addBead();
-
         DrawMoveBead();
-
     }
+    //增加珠子
     public void addBead(){
+        isClear = true;
         for(int i=0;i<size_x;i++)
             for (int j=0;j<size_y;j++) {
                 if(beads[i][j].kind == -1){
+                    isClear = false;
                     beads[i][j].newKind();
                     beads[i][j].y = 0 - (BitmapSize * (j+1));
                 }
@@ -336,14 +323,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                 beads[i][j].state = true;
             }
     }
-
     //創建珠子
     private void CreateBead() {
         try {
             for(int i=0;i<size_x;i++)
                 for (int j=0;j<size_y;j++) {
                     beads[i][j] = new Bead(getContext(), BitmapSize, BitmapSize * i, 0 - (BitmapSize * (j+1)),height);
-                    backGround[i][j] = new BackGround(BitmapSize * i,(height,BitmapSize);
+                    beads[i][j].setBackgroundPosition(BitmapSize * i,height - (BitmapSize * (j+1)));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -356,8 +342,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         canvas.drawColor(Color.BLACK);
         for(int i=0;i<size_x;i++)
             for (int j=0;j<size_y;j++) {
-                    beads[i][j].draw(canvas);
+
+                beads[i][j].drawBackground(canvas);
+        }
+        for(int i=0;i<size_x;i++)
+            for (int j=0;j<size_y;j++) {
+
+                beads[i][j].draw(canvas);
             }
+
+            //canvas.drawBitmap(b, 100, 100, null);
+
         holder.unlockCanvasAndPost(canvas);
     }
 
@@ -371,17 +366,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                     flag = false;
                     for (int i = 0; i < size_x; i++) {
                         for (int j = 0; j < size_y; j++) {
-                            if (beads[i][j].move(j, height,20)) {
+                            if (beads[i][j].move(j, height,30)) {
                                 flag = true;
                             }
                         }
                     }
                     DrawBead();
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(5);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+                if(!isClear){
+                    SearchBead();
                 }
             }
         }.start();
@@ -393,12 +391,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                 gameManager.getHeight() - SmallRedCat.CatHeight));
     }
 
-
     public void GamePause(){
         GameFlag = false;
         TochFlag = false;
     }
     public void GameStart(){
+        TochFlag = true;
         GameFlag = true;
     }
     public void setGameManager(GameManagerWithCounter gameManager) {

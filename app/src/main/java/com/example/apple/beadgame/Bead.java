@@ -20,8 +20,8 @@ public class Bead{
                 YELLOW = 4;
     }
     int h,kind,size; //圖片種類 大小
-    int x,y,nextY;
-    Bitmap bitmap;
+    int x,y,nextY,bcx,bcy;
+    Bitmap bitmap,background_bitmap;
     boolean state = true,check;
     Context context;
     public Bead(Context context,int size,int x,int y,int h){
@@ -64,31 +64,33 @@ public class Bead{
         }
         bitmap = Bitmap.createScaledBitmap(bitmap,size,size,false);
     }
+    public void setBackgroundPosition(int x,int y){
+        this.bcx = x;
+        this.bcy = y;
+        setBackground_bitmap();
 
-//    public void setBackground_bitmap() {
-//        //設定珠子背景
-//        if(((bcx+bcy)/size)%2 == 0) {
-//            background_bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.bc_dark);
-//        }
-//        else {
-//            background_bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.bc_light);
-//        }
-//        background_bitmap = Bitmap.createScaledBitmap(background_bitmap,size,size,false);
-//    }
+    }
+
+    public void setBackground_bitmap() {
+        //設定珠子背景
+        if(((bcx+bcy)/size)%2 == 0) {
+            background_bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.bc_dark);
+        }
+        else {
+            background_bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.bc_light);
+        }
+        background_bitmap = Bitmap.createScaledBitmap(background_bitmap,size,size,false);
+    }
     public void draw(Canvas canvas){
-        //畫背景
-//            canvas.drawBitmap(background_bitmap, bcx, bcy, null);
-
         //畫珠子
         if(state)
         canvas.drawBitmap(bitmap, x, y, null);
     }
-    public String getXY(){
-        Log.i(x+"",y+"");
-        return "";
+    public void drawBackground(Canvas canvas){
+        canvas.drawBitmap(background_bitmap, bcx, bcy, null);
     }
+
     public int getKind(){
-        //Log.i(kind+"",kind+"");
         return kind;
     }
 
