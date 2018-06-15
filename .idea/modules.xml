@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BeadGame.iml" filepath="$PROJECT_DIR$/BeadGame.iml" />
+      <module fileurl="file://C:\Users\wwwww\Documents\GitHub\BeadGame\BeadGame.iml" filepath="C:\Users\wwwww\Documents\GitHub\BeadGame\BeadGame.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\wwwww\Documents\GitHub\BeadGame\app\app.iml" filepath="C:\Users\wwwww\Documents\GitHub\BeadGame\app\app.iml" />
     </modules>
   </component>
 </project>

@@ -47,4 +47,9 @@ public class BigOrangeCat extends RedCat{
 
         animation.start();
     }
+
+    @Override
+    public String getCatCharacterName() {
+        return "OrangeCat";
+    }
 }

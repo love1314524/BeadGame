@@ -7,7 +7,7 @@ import android.graphics.Rect;
 import java.util.LinkedList;
 import java.util.List;
 
-abstract class Character {
+public abstract class Character {
     enum CharacterState {
         COLLISION_ON,
         COLLISION_OFF,

@@ -11,7 +11,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.example.apple.beadgame.CatEnemy.GameManager;
 import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
+import com.example.apple.beadgame.CatEnemy.Level;
 import com.example.apple.beadgame.CatEnemy.MidBlueCat;
 import com.example.apple.beadgame.CatEnemy.RedCat;
 import com.example.apple.beadgame.CatEnemy.SmallRedCat;
@@ -36,7 +38,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     int width,height,BitmapSize;
     boolean TochFlag=true,GameFlag = true,isClear = true;
     Bitmap b;
-    GameManagerWithCounter gameManager;
+    NetworkGameManager gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
 
     public GameView(Context context, AttributeSet attrs) {
@@ -386,7 +388,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     }
 
     public void SummonCat(){
-        gameManager.regist(new SmallRedCat(gameManager.getContext(),
+        gameManager.regist(new SmallRedCat(getContext(),
                 gameManager.getHeight() / 2,
                 gameManager.getHeight() - SmallRedCat.CatHeight));
     }
@@ -399,7 +401,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         TochFlag = true;
         GameFlag = true;
     }
-    public void setGameManager(GameManagerWithCounter gameManager) {
+    public void setGameManager(NetworkGameManager gameManager) {
         this.gameManager = gameManager;
     }
 }

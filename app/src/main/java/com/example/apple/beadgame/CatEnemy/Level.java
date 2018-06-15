@@ -15,25 +15,22 @@ import com.example.apple.beadgame.R;
 
 public class Level extends Thread{
 
-    private GameManagerWithCounter gameManager;
-    private GameView gameView;
-    private Bitmap cat1;
-    private boolean gameClear = false;
-    private boolean gameOver = false;
-    private boolean allOver = false;
+    protected GameManagerWithCounter gameManager;
+    protected GameView gameView;
+    protected boolean gameClear = false;
+    protected boolean gameOver = false;
+    protected boolean allOver = false;
     private Activity activity;
 
     public Level(Activity activity, GameManagerWithCounter gameManager, GameView gameView){
         this.gameManager = gameManager;
         this.gameView = gameView;
         this.activity = activity;
-        cat1 = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.cat_blue);
         init();
     }
 
     @Override
     public void run() {
-        int i = 0;
         while(!allOver) {
             try {
                 Thread.sleep(500);
