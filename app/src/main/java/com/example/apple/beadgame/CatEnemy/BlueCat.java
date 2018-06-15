@@ -67,4 +67,9 @@ public class BlueCat extends CatCharacter {
             this.state = CharacterState.WAIT_FOR_DESTROY;
         }
     }
+
+    @Override
+    public String getCatCharacterName() {
+        return "BlueCat";
+    }
 }

@@ -46,4 +46,8 @@ public class EnemyShrimp extends BlueCat {
 
         animation.start();
     }
+    @Override
+    public String getCatCharacterName() {
+        return "BlueShrimp";
+    }
 }

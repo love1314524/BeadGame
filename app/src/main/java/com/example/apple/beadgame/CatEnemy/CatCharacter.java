@@ -75,6 +75,8 @@ public abstract class CatCharacter extends Character {
         x += stepSize;
     }
 
+     public abstract String getCatCharacterName();
+
     void moveLeft(int stepSize) {
 
         if (x - stepSize < 0) {
