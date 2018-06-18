@@ -38,7 +38,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     int width,height,BitmapSize;
     boolean TochFlag=true,GameFlag = true,isClear = true;
     Bitmap b;
-    NetworkGameManager gameManager;
+    NetworkGame.GameHandler gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
 
     public GameView(Context context, AttributeSet attrs) {
@@ -388,9 +388,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     }
 
     public void SummonCat(){
-        gameManager.regist(new SmallRedCat(getContext(),
-                gameManager.getHeight() / 2,
-                gameManager.getHeight() - SmallRedCat.CatHeight));
+        gameManager.addCharacter(new SmallRedCat(getContext(),
+                gameManager.getScreenHeight() / 2,
+                gameManager.getScreenWidth() - SmallRedCat.CatHeight));
     }
 
     public void GamePause(){
@@ -401,7 +401,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         TochFlag = true;
         GameFlag = true;
     }
-    public void setGameManager(NetworkGameManager gameManager) {
+    public void setGameManager(NetworkGame.GameHandler gameManager) {
         this.gameManager = gameManager;
     }
 }

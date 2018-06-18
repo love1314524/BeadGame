@@ -5,22 +5,22 @@ import android.os.Bundle;
 import android.view.SurfaceHolder;
 
 import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
-import com.example.apple.beadgame.CatEnemy.Level;
 
 public class MainActivity extends Activity {
-    private NetworkGameManager gameManager;
+    private GameManagerWithCounter gameManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        gameManager = (NetworkGameManager)findViewById(R.id.WarCatGameManager);
+        gameManager = (GameManagerWithCounter)findViewById(R.id.WarCatGameManager);
         final GameView gameView = (GameView)findViewById(R.id.GameView);
         gameManager.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                new NetworkGameLevel(MainActivity.this, gameManager, gameView).start();
-               gameView.setGameManager(gameManager);
+                NetworkGame game = new NetworkGame(MainActivity.this, gameManager, gameView);
+                game.setPlayer1(gameView);
+                game.setPlayer2(new NetworkGamer());
             }
             @Override
             public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) { }

@@ -9,7 +9,15 @@ import java.util.List;
  * Created by wwwww on 2018/6/15.
  */
 public class ConnectManager {
-    static class ServerConnection{
+    static final String HOST = "";
+    static final String roomList   = "/roomlist";
+    static final String createRoom = "/createroom";
+    static final String mqtt       = "/mqttpub";
+    static class ServerConnection {
+        ServerConnection() {
+            //TODO
+        }
+
         List<String> getEnemyAction() {
             return new ArrayList<>();
         }
@@ -23,8 +31,10 @@ public class ConnectManager {
         }
     }
 
-    private static ServerConnection connection = new ServerConnection();
+    private final static ServerConnection connection = new ServerConnection();
     public static ServerConnection getInstantiation(){
-        return connection;
+        synchronized (connection) {
+            return connection;
+        }
     }
 }
