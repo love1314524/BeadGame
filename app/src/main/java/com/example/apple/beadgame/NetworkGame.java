@@ -15,7 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONException;
 
 public class NetworkGame extends Thread{
-    protected ServerConnection connection;
+    protected ConnectionManager.ServerConnection connection;
     protected GameManagerWithCounter gameManager;
     protected GameView gameView;
     protected boolean gameClear = false;
@@ -54,7 +54,7 @@ public class NetworkGame extends Thread{
         this.gameManager = gameManager;
         this.gameView = gameView;
         this.activity = activity;
-        connection = new ServerConnection(activity.getApplicationContext());
+        connection = ConnectionManager.getInstance(activity.getApplicationContext());
     }
 
     private void init() {
@@ -120,13 +120,14 @@ public class NetworkGame extends Thread{
         }
     }
 
-
     public void setPlayer1(Gamer gameView) {
         gameView.setGameHandler(new GameHandler());
+        gamer1 = gameView;
     }
 
     public void setPlayer2(Gamer gamer) {
         gamer.setGameHandler(new GameHandlerWithNoNetwork());
+        gamer2 = gamer;
     }
 
     void gamePause() {
