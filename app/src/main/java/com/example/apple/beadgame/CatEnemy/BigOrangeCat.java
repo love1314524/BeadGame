@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.example.apple.beadgame.NetworkGame;
 import com.example.apple.beadgame.R;
 
 import java.util.LinkedList;
@@ -51,5 +52,17 @@ public class BigOrangeCat extends RedCat{
     @Override
     public String getCatCharacterName() {
         return "OrangeCat";
+    }
+
+    public static BigOrangeCat createCat(Context context, NetworkGame.GameHandler handler, int heal, int attack) {
+        BigOrangeCat redCat = new BigOrangeCat(
+                context,
+                heal,
+                attack,
+                0,
+                handler.getScreenHeight() - BigOrangeCat.CatHeight,
+                BigOrangeCat.CatWidth,
+                BigOrangeCat.CatHeight);
+        return redCat;
     }
 }

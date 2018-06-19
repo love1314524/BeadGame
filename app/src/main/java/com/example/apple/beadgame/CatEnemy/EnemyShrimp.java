@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.example.apple.beadgame.NetworkGame;
 import com.example.apple.beadgame.R;
 
 import java.util.LinkedList;
@@ -49,5 +50,17 @@ public class EnemyShrimp extends BlueCat {
     @Override
     public String getCatCharacterName() {
         return "BlueShrimp";
+    }
+
+    public static EnemyShrimp createCat(Context context, NetworkGame.GameHandler handler, int heal, int attack) {
+        EnemyShrimp redCat = new EnemyShrimp(
+                context,
+                heal,
+                attack,
+                handler.getScreenWidth() - EnemyShrimp.CatWidth,
+                handler.getScreenHeight() - EnemyShrimp.CatHeight,
+                EnemyShrimp.CatWidth,
+                EnemyShrimp.CatHeight);
+        return redCat;
     }
 }

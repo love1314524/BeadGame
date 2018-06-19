@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.example.apple.beadgame.NetworkGame;
 import com.example.apple.beadgame.R;
 
 /**
@@ -25,5 +26,17 @@ public class SmallRedCat extends RedCat {
         animation.addAnimation(new OneBitmapFrame(bmp));
 
         animation.start();
+    }
+
+    public static SmallRedCat createCat(Context context, NetworkGame.GameHandler handler, int heal, int attack) {
+        SmallRedCat redCat = new SmallRedCat(
+                context,
+                heal,
+                attack,
+                0,
+                handler.getScreenHeight() - SmallRedCat.CatHeight,
+                SmallRedCat.CatWidth,
+                SmallRedCat.CatHeight);
+        return redCat;
     }
 }

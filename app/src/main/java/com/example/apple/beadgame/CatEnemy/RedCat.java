@@ -3,6 +3,8 @@ package com.example.apple.beadgame.CatEnemy;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.example.apple.beadgame.NetworkGame;
+
 import java.util.List;
 
 
