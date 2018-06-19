@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * Created by apple on 2018/6/8.
  */
-public class GameView extends SurfaceView implements SurfaceHolder.Callback{
+public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gamer{
 
     private SurfaceHolder holder;
 
@@ -393,15 +393,26 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                 gameManager.getScreenWidth() - SmallRedCat.CatHeight));
     }
 
-    public void GamePause(){
-        GameFlag = false;
-        TochFlag = false;
+    @Override
+    public void setGameHandler(NetworkGame.GameHandler gameHandler) {
+        this.gameManager = gameHandler;
     }
-    public void GameStart(){
+
+    @Override
+    public void gameStart() {
         TochFlag = true;
         GameFlag = true;
     }
-    public void setGameManager(NetworkGame.GameHandler gameManager) {
-        this.gameManager = gameManager;
+
+    @Override
+    public void gamePause() {
+        GameFlag = false;
+        TochFlag = false;
+    }
+
+    @Override
+    public void gameStop() {
+        GameFlag = false;
+        TochFlag = false;
     }
 }

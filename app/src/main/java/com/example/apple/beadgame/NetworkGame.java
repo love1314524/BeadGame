@@ -12,15 +12,17 @@ import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
 import com.example.apple.beadgame.CatEnemy.TextCharacter;
 
 public class NetworkGame extends Thread{
+    protected ServerConnection connection;
     protected GameManagerWithCounter gameManager;
     protected GameView gameView;
     protected boolean gameClear = false;
     protected boolean gameOver = false;
     protected boolean allOver = false;
-    private Activity activity;
-    private ConnectManager.ServerConnection connection = ConnectManager.getInstantiation();
+    protected Activity activity;
+    protected Gamer gamer1, gamer2;
 
     class GameHandler{
+        private GameHandler(){}
         int getScreenHeight() {
             return gameManager.getHeight();
         }
@@ -30,7 +32,7 @@ public class NetworkGame extends Thread{
         }
 
         void addCharacter(CatCharacter character) {
-            connection.sendAction(character);
+            connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
             gameManager.regist(character);
         }
     }
@@ -45,6 +47,7 @@ public class NetworkGame extends Thread{
         this.gameManager = gameManager;
         this.gameView = gameView;
         this.activity = activity;
+        connection = new ServerConnection(activity.getApplicationContext());
     }
 
     private void init() {
@@ -110,16 +113,31 @@ public class NetworkGame extends Thread{
     }
 
 
-    public void setPlayer1(GameView gameView) {
-        gameView.setGameManager(new GameHandler());
+    public void setPlayer1(Gamer gameView) {
+        gameView.setGameHandler(new GameHandler());
     }
 
     public void setPlayer2(Gamer gamer) {
         gamer.setGameHandler(new GameHandlerWithNoNetwork());
     }
 
+    private void gamePause() {
+        gamer1.gamePause();
+        gamer2.gamePause();
+    }
+
+    private void gameStop() {
+        gamer1.gameStop();
+        gamer2.gameStop();
+    }
+
+    private void gameStart() {
+        gamer1.gameStart();
+        gamer2.gameStart();
+    }
+
     private void onGameEnd(final String gameState) {
-        gameView.GamePause();
+        this.gamePause();
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -140,7 +158,7 @@ public class NetworkGame extends Thread{
                         gameManager.resumeGame();
                         init();
                         gameManager.updateScreen();
-                        gameView.GameStart();
+                        NetworkGame.this.gameStart();
 
                     }
                 });

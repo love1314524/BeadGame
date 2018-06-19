@@ -9,4 +9,19 @@ public class NetworkGamer implements Gamer {
     public void setGameHandler(NetworkGame.GameHandler gameHandler) {
         this.gameHandler = gameHandler;
     }
+
+    @Override
+    public void gameStart() {
+
+    }
+
+    @Override
+    public void gamePause() {
+
+    }
+
+    @Override
+    public void gameStop() {
+
+    }
 }
