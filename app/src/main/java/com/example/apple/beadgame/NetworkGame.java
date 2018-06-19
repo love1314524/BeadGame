@@ -24,13 +24,13 @@ public class NetworkGame extends Thread{
     protected Activity activity;
     protected Gamer gamer1, gamer2;
 
-    class GameHandler{
+    public class GameHandler{
         private GameHandler(){}
-        int getScreenHeight() {
+        public int getScreenHeight() {
             return gameManager.getHeight();
         }
 
-        int getScreenWidth() {
+        public int getScreenWidth() {
             return gameManager.getWidth();
         }
 
@@ -55,6 +55,7 @@ public class NetworkGame extends Thread{
         this.gameView = gameView;
         this.activity = activity;
         connection = new ServerConnection(activity.getApplicationContext());
+        init();
     }
 
     private void init() {
@@ -123,10 +124,12 @@ public class NetworkGame extends Thread{
 
     public void setPlayer1(Gamer gameView) {
         gameView.setGameHandler(new GameHandler());
+        gamer1 = gameView;
     }
 
     public void setPlayer2(Gamer gamer) {
         gamer.setGameHandler(new GameHandlerWithNoNetwork());
+        gamer2 = gamer;
     }
 
     void gamePause() {

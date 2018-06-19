@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.example.apple.beadgame.CatEnemy.BigOrangeCat;
 import com.example.apple.beadgame.CatEnemy.GameManager;
 import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
 import com.example.apple.beadgame.CatEnemy.Level;
@@ -388,9 +389,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     }
 
     public void SummonCat(){
-        gameManager.addCharacter(new SmallRedCat(getContext(),
-                gameManager.getScreenHeight() / 2,
-                gameManager.getScreenWidth() - SmallRedCat.CatHeight));
+        gameManager.addCharacter(BigOrangeCat.createCat(getContext(), gameManager, 100, 10));
     }
 
     @Override

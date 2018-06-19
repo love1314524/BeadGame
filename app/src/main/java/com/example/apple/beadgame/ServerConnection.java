@@ -191,7 +191,7 @@ public class ServerConnection {
     }
 
     public void sendAction(String action) throws JSONException, MqttException {
-        if(client.isConnected()) {
+        if(client != null && client.isConnected()) {
             JSONObject object = new JSONObject();
             object.put("id", playerId);
             object.put("status", 4);
