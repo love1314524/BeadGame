@@ -32,7 +32,6 @@ public class ServerConnection {
     static final String roomList   = "/roomlist";
     static final String createRoom = "/createroom";
     static final String joinroom   = "/joinroom";
-    static final String mqtt       = "/mqttpub";
     static final String getUID     = "/uid";
     static final String mqttTopic  = "/catgirl/";
 

@@ -99,7 +99,7 @@ public class Level extends Thread{
     }
 
     private void onGameEnd(final String gameState) {
-        gameView.GamePause();
+        gameView.gamePause();
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -120,7 +120,7 @@ public class Level extends Thread{
                         gameManager.resumeGame();
                         init();
                         gameManager.updateScreen();
-                        gameView.GameStart();
+                        gameView.gameStart();
 
                     }
                 });

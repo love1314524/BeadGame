@@ -21,6 +21,7 @@ public class MainActivity extends Activity {
                 NetworkGame game = new NetworkGame(MainActivity.this, gameManager, gameView);
                 game.setPlayer1(gameView);
                 game.setPlayer2(new NetworkGamer());
+                game.start();
             }
             @Override
             public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) { }

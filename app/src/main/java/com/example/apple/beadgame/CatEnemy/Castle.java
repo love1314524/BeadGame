@@ -89,4 +89,9 @@ public class Castle extends CatCharacter {
         super.onDraw(canvas);
         canvas.drawBitmap(healBitmap, this.x, this.y, null);
     }
+
+    @Override
+    public String getCatCharacterName() {
+        return "Castle";
+    }
 }

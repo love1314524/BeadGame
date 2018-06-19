@@ -11,6 +11,9 @@ import com.example.apple.beadgame.CatEnemy.CatCharacter;
 import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
 import com.example.apple.beadgame.CatEnemy.TextCharacter;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.json.JSONException;
+
 public class NetworkGame extends Thread{
     protected ServerConnection connection;
     protected GameManagerWithCounter gameManager;
@@ -32,7 +35,11 @@ public class NetworkGame extends Thread{
         }
 
         void addCharacter(CatCharacter character) {
-            connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
+            try {
+                connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
+            } catch (JSONException | MqttException e) {
+                e.printStackTrace();
+            }
             gameManager.regist(character);
         }
     }
@@ -103,6 +110,7 @@ public class NetworkGame extends Thread{
 
     @Override
     public void run() {
+        gameStart();
         while(!allOver) {
             try {
                 Thread.sleep(500);
@@ -121,17 +129,17 @@ public class NetworkGame extends Thread{
         gamer.setGameHandler(new GameHandlerWithNoNetwork());
     }
 
-    private void gamePause() {
+    void gamePause() {
         gamer1.gamePause();
         gamer2.gamePause();
     }
 
-    private void gameStop() {
+    void gameStop() {
         gamer1.gameStop();
         gamer2.gameStop();
     }
 
-    private void gameStart() {
+    void gameStart() {
         gamer1.gameStart();
         gamer2.gameStart();
     }
