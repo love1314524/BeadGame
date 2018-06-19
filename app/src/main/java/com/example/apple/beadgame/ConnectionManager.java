@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -28,7 +29,6 @@ import java.util.List;
 
 public class ConnectionManager {
     public static class ServerConnection {
-
         static final String mqttHost = "tcp://xx.xx.xx.xx";
         static final String HOST = "";
         static final String roomList   = "/roomlist";
@@ -51,23 +51,23 @@ public class ConnectionManager {
                 }
 
                 if(object.has("command") && object.getString("command").equals("start")) {
-                    if(serverActions != null) {
-                        serverActions.onStart();
+                    for(ServerActions serverAction : serverActionList) {
+                        serverAction.onStart();
                     }
                     return;
                 }
 
                 if(object.has("command") && object.getString("command").equals("end")) {
-                    if(serverActions != null) {
-                        serverActions.onEnd();
+                    for(ServerActions serverAction : serverActionList) {
+                        serverAction.onEnd();
                     }
                     return;
                 }
 
                 switch (object.getInt("status")){
                     case 4:
-                        if(serverActions != null && object.has("action")) {
-                            serverActions.onEnemyAction(object.getString("action"));
+                        for(EnemyActions enemyActions : enemyActionsListenerList) {
+                            enemyActions.onEnemyAction(object.getString("action"));
                         }
                         break;
                 }
@@ -81,13 +81,33 @@ public class ConnectionManager {
             int roomPlayerNum;
         }
 
-        interface ServerActions {
+        interface EnemyActions {
             void onEnemyAction(String action);
+        }
+
+        interface ServerActions {
             void onStart();
             void onEnd();
         }
 
-        ServerActions serverActions;
+        List<ServerActions> serverActionList = new LinkedList<>();
+        List<EnemyActions> enemyActionsListenerList = new LinkedList<>();
+
+        void addServerActionListener(ServerActions actions) {
+            serverActionList.add(actions);
+        }
+
+        void removeServerActionListener(ServerActions actions) {
+            serverActionList.remove(actions);
+        }
+
+        void addEnemyActionListener(EnemyActions actions) {
+            enemyActionsListenerList.add(actions);
+        }
+
+        void removeEnemyActionListener(EnemyActions actions) {
+            enemyActionsListenerList.remove(actions);
+        }
 
         private static String streamToString(InputStream stream) throws IOException {
             ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
@@ -206,11 +226,7 @@ public class ConnectionManager {
                 Log.e("error", "mqtt not connected");
             }
         }
-
-        public void setActionListener(ServerActions serverActions) {
-            this.serverActions = serverActions;
-        }
-
+        
         public static List<RoomInfo> getRoomList() throws IOException, JSONException {
             URLConnection connection = new URL(HOST + roomList).openConnection();
             JSONArray array = streamToJsonArray(connection.getInputStream());

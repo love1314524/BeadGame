@@ -52,7 +52,7 @@ public class EnemyShrimp extends BlueCat {
         return "BlueShrimp";
     }
 
-    public static EnemyShrimp createCat(Context context, NetworkGame.GameHandler handler, int heal, int attack) {
+    public static EnemyShrimp createCat(Context context) {
         EnemyShrimp redCat = new EnemyShrimp(
                 context,
                 heal,
