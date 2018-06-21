@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">BeadGame</string>
+    <string name="people">人</string>
+    <string name="ready">準備</string>
+    <string name="cancel_ready">取消準備</string>
+    <string name="enemy_readying">對手準備中</string>
+    <string name="enemy_not_ready">對手尚未準備</string>
+    <string name="leave_room_or_not">離開房間?</string>
+    <string name="yes">是</string>
+    <string name="enemy_leaved">enemy leaved</string>
+    <string name="enemy_joined">加入房間</string>
+    <string name="hello_user">Hello, user </string>
+    <string name="create_room">create room</string>
+    <string name="refresh">refresh</string>
 </resources>

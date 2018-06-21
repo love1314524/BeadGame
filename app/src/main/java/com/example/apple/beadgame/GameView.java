@@ -381,7 +381,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         }.start();
     }
 
-    public void SummonCat(){
+    public void SummonCat() {
         gameManager.addCharacter(BigOrangeCat.createCat(getContext(), gameManager, 100, 10));
     }
 

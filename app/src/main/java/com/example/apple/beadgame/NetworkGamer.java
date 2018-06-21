@@ -12,7 +12,7 @@ public class NetworkGamer implements Gamer {
     private ConnectionManager.ServerConnection connection;
     private Context context;
 
-    private ConnectionManager.ServerConnection.EnemyActions listener = new ConnectionManager.ServerConnection.EnemyActions() {
+    private ConnectionManager.ServerConnection.GameActionsListener listener = new ConnectionManager.ServerConnection.GameActionsListener() {
         @Override
         public void onEnemyAction(String action) {
             String act[] = action.split(" ");
@@ -20,8 +20,13 @@ public class NetworkGamer implements Gamer {
                 return;
             }
             if(act[0].equals("OrangeCat")) {
-                gameHandler.addCharacter(EnemyShrimp.createCat(context));
+                gameHandler.addCharacter(EnemyShrimp.createCat(context, gameHandler, 100, 20));
             }
+        }
+
+        @Override
+        public void onGameEnd() {
+            connection.removeGameActionsListener(listener);
         }
     };
 
@@ -37,16 +42,16 @@ public class NetworkGamer implements Gamer {
 
     @Override
     public void gameStart() {
-        connection.addEnemyActionListener(listener);
+        connection.addGameActionsListener(listener);
     }
 
     @Override
     public void gamePause() {
-        connection.removeEnemyActionListener(listener);
+        connection.removeGameActionsListener(listener);
     }
 
     @Override
     public void gameStop() {
-
+        connection.removeGameActionsListener(listener);
     }
 }

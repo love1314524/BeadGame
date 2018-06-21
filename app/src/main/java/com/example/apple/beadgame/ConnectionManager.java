@@ -2,13 +2,13 @@ package com.example.apple.beadgame;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.example.apple.beadgame.CatEnemy.CatCharacter;
+import android.widget.Toast;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,19 +28,28 @@ import java.util.List;
  */
 
 public class ConnectionManager {
+    private ConnectionManager(){};
     public static class ServerConnection {
-        static final String mqttHost = "tcp://xx.xx.xx.xx";
-        static final String HOST = "";
+        static final String mqttHost = "tcp://47.74.20.158";
+        static final String HOST = "http://192.168.0.138:9487";
+
         static final String roomList   = "/roomlist";
         static final String createRoom = "/createroom";
         static final String joinroom   = "/joinroom";
         static final String getUID     = "/uid";
-        static final String mqttTopic  = "/catgirl/";
+        static final String mqttTopic  = "catgirl/room/";
 
-        MqttAndroidClient client;
-        String playerId;
-        String roomId;
-        boolean onRoom = false;
+        static final int MQTT_WAIT_CODE = 0;
+        static final int MQTT_READY_CODE = 1;
+        static final int MQTT_START_CODE = 2;
+        static final int MQTT_DISCONNECT_CODE = 3;
+        static final int MQTT_FIGHTING_CODE = 4;
+        static final int MQTT_ENDING_CODE = 5;
+
+        private MqttAndroidClient client;
+        private String playerId;
+        private String roomId;
+        private Context context;
 
         private IMqttMessageListener roomMessageListener = new IMqttMessageListener() {
             @Override
@@ -50,24 +59,54 @@ public class ConnectionManager {
                     return;
                 }
 
-                if(object.has("command") && object.getString("command").equals("start")) {
-                    for(ServerActions serverAction : serverActionList) {
-                        serverAction.onStart();
+                if(object.has("command")) {
+                    if (object.getString("command").equals("start")) {
+                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                            action.onStartGame();
+                        }
+                        return;
                     }
-                    return;
+
+                    else if (object.getString("command").equals("end")) {
+                        for (GameActionsListener action : gameActionsListenerListenerList) {
+                            action.onGameEnd();
+                        }
+                        return;
+                    }
+
+                    else if (object.getString("command").equals("leave")) {
+                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                            action.roomClose();
+                        }
+                        return;
+                    }
+                    else if (object.getString("command").equals("join")) {
+                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                            action.enemyJoin(object.getString("player"));
+                        }
+                        return;
+                    }
                 }
 
-                if(object.has("command") && object.getString("command").equals("end")) {
-                    for(ServerActions serverAction : serverActionList) {
-                        serverAction.onEnd();
-                    }
-                    return;
-                }
-
-                switch (object.getInt("status")){
-                    case 4:
-                        for(EnemyActions enemyActions : enemyActionsListenerList) {
-                            enemyActions.onEnemyAction(object.getString("action"));
+                switch (object.getInt("status")) {
+                    case MQTT_FIGHTING_CODE:
+                        for(GameActionsListener actionsListener : gameActionsListenerListenerList) {
+                            actionsListener.onEnemyAction(object.getString("action"));
+                        }
+                        break;
+                    case MQTT_WAIT_CODE:
+                        for(WaitRoomActionsListener actionsListener : waitRoomActionsListenerList) {
+                            actionsListener.onEnemyWaiting();
+                        }
+                        break;
+                    case MQTT_READY_CODE:
+                        for(WaitRoomActionsListener actionsListener : waitRoomActionsListenerList) {
+                            actionsListener.onEnemyReady();
+                        }
+                        break;
+                    case MQTT_DISCONNECT_CODE:
+                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                            action.onEnemyLeave();
                         }
                         break;
                 }
@@ -81,32 +120,37 @@ public class ConnectionManager {
             int roomPlayerNum;
         }
 
-        interface EnemyActions {
+        interface GameActionsListener {
             void onEnemyAction(String action);
+            void onGameEnd();
         }
 
-        interface ServerActions {
-            void onStart();
-            void onEnd();
+        interface WaitRoomActionsListener {
+            void onStartGame();
+            void onEnemyReady();
+            void onEnemyWaiting();
+            void onEnemyLeave();
+            void roomClose();
+            void enemyJoin(String enemyName);
         }
 
-        List<ServerActions> serverActionList = new LinkedList<>();
-        List<EnemyActions> enemyActionsListenerList = new LinkedList<>();
+        List<GameActionsListener> gameActionsListenerListenerList = new LinkedList<>();
+        List<WaitRoomActionsListener> waitRoomActionsListenerList = new LinkedList<>();
 
-        void addServerActionListener(ServerActions actions) {
-            serverActionList.add(actions);
+        void addWaitRoomActionsListener(WaitRoomActionsListener actions) {
+            waitRoomActionsListenerList.add(actions);
         }
 
-        void removeServerActionListener(ServerActions actions) {
-            serverActionList.remove(actions);
+        void removeWaitRoomActionsListener(WaitRoomActionsListener actions) {
+            waitRoomActionsListenerList.remove(actions);
         }
 
-        void addEnemyActionListener(EnemyActions actions) {
-            enemyActionsListenerList.add(actions);
+        void addGameActionsListener(GameActionsListener actions) {
+            gameActionsListenerListenerList.add(actions);
         }
 
-        void removeEnemyActionListener(EnemyActions actions) {
-            enemyActionsListenerList.remove(actions);
+        void removeGameActionsListener(GameActionsListener actions) {
+            gameActionsListenerListenerList.remove(actions);
         }
 
         private static String streamToString(InputStream stream) throws IOException {
@@ -130,119 +174,268 @@ public class ConnectionManager {
         }
 
         private ServerConnection(Context context) {
-            try {
-                playerId = getPlayerId();
-                client = new MqttAndroidClient(context, mqttHost, playerId);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            this.context = context;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        HttpURLConnection connection = (HttpURLConnection)new URL(HOST + getUID).openConnection();
+                        connection.setRequestMethod("GET");
+                        playerId = streamToJsonObject(connection.getInputStream()).getString("id");
+                        client = new MqttAndroidClient(ServerConnection.this.context, mqttHost, playerId);
+                        client.connect();
+                    } catch (IOException | MqttException | JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
 
-        private String getPlayerId() throws IOException {
-            HttpURLConnection connection = (HttpURLConnection)new URL(HOST + getUID).openConnection();
-            connection.setRequestMethod("GET");
-            return streamToString(connection.getInputStream());
+        public String getPlayerId() {
+            return playerId;
         }
 
         public boolean isOnRoom() {
-            return onRoom;
+            return roomId != null;
+        }
+
+        interface ActionCallback{
+            void onSuccess();
+            void onFailure(Exception e);
+        }
+
+        private void sendMqttStatesMessage(final int state) {
+            if(playerId == null) {
+                return;
+            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        JSONObject object = new JSONObject();
+                        object.put("id", playerId);
+                        object.put("status", state);
+                        String strMsg = object.toString();
+                        MqttMessage message = new MqttMessage();
+                        message.setPayload(strMsg.getBytes());
+                        message.setQos(2);
+                        client.publish(mqttTopic + roomId, message);
+                    } catch (JSONException | MqttException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
+        void sendReadyMessage() {
+            sendMqttStatesMessage(MQTT_READY_CODE);
+        }
+
+        void sendWaitingMessage() {
+            sendMqttStatesMessage(MQTT_WAIT_CODE);
+        }
+
+        void sendEndingMessage() {
+            sendMqttStatesMessage(MQTT_ENDING_CODE);
         }
 
         /**
          * join the room
          * @param roomId  which room you want to join
-         * @return success or not
-         * @throws JSONException json parse error
-         * @throws IOException network error
          */
-        public boolean joinRoom(String roomId) throws JSONException, IOException, MqttException {
-            synchronized (this) {
-                if (onRoom) {
-                    return false;
+        public void joinRoom(final String roomId, final ActionCallback callback) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if(ServerConnection.this.roomId != null) {
+                        leaveRoom(null);
+                    }
+                    synchronized (this) {
+                        try {
+                            JSONObject object = new JSONObject();
+                            object.put("roomid", roomId);
+                            object.put("id", playerId);
+                            HttpURLConnection connection = (HttpURLConnection)new URL(HOST + joinroom).openConnection();
+                            connection.setConnectTimeout(1000);
+                            connection.setReadTimeout(1000);
+                            connection.addRequestProperty("Content-Type", "application/json");
+                            connection.setRequestMethod("POST");
+                            connection.getOutputStream().write(object.toString().getBytes());
+                            String result = streamToString(connection.getInputStream());
+                            if(result.equals("success")){
+                                ServerConnection.this.roomId = roomId;
+                                client.subscribe(mqttTopic + roomId, 0, roomMessageListener);
+                                if (callback != null) {
+                                    callback.onSuccess();
+                                }
+                            } else if (result.equals("full")) {
+                                if (callback != null) {
+                                    callback.onFailure(new Exception("room is full"));
+                                }
+                            } else {
+                                if (callback != null) {
+                                    callback.onFailure(new Exception("undefine error"));
+                                }
+                            }
+                        } catch (JSONException | MqttException | IOException e) {
+                            if (callback != null) {
+                                callback.onFailure(e);
+                            }
+                        }
+                    }
                 }
-                JSONObject object = new JSONObject();
-                object.put("roomid", roomId);
-                object.put("id", playerId);
-                HttpURLConnection connection = (HttpURLConnection)new URL(HOST + joinroom).openConnection();
-                connection.setRequestMethod("POST");
-                connection.getOutputStream().write(object.toString().getBytes());
-                String result = streamToString(connection.getInputStream());
-                onRoom = result.equals("success");
-                if(onRoom){
-                    this.roomId = roomId;
-                    client.subscribe(mqttTopic + "room/" + roomId, 0, roomMessageListener);
-                }
-                return onRoom;
-            }
+            }).start();
         }
 
         /**
          *  create the room
-         * @return success or not
-         * @throws JSONException json parse error
-         * @throws IOException network error
          */
-        public boolean createRoom() throws JSONException, IOException, MqttException {
-            synchronized (this) {
-                if (onRoom) {
-                    return false;
+        public void createRoom(final String roomName, final ActionCallback callback) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if(roomId != null) {
+                        leaveRoom(null);
+                    }
+                    synchronized (this) {
+                        try {
+                            JSONObject object = new JSONObject();
+                            object.put("id", playerId);
+                            object.put("roomname", roomName);
+                            HttpURLConnection connection = (HttpURLConnection)new URL(HOST + createRoom).openConnection();
+                            connection.setConnectTimeout(1000);
+                            connection.setReadTimeout(1000);
+                            connection.addRequestProperty("Content-Type", "application/json");
+                            connection.setRequestMethod("POST");
+                            connection.getOutputStream().write(object.toString().getBytes());
+                            String result = streamToString(connection.getInputStream());
+                            if(result.equals("success")){
+                                roomId = playerId;
+                                client.subscribe(mqttTopic + roomId, 0, roomMessageListener);
+                                if (callback != null) {
+                                    callback.onSuccess();
+                                }
+                            } else {
+                                if (callback != null) {
+                                    callback.onFailure(new Exception("undefine error, create room fail"));
+                                }
+                            }
+                        } catch (JSONException | MqttException | IOException e) {
+                            if(callback != null) {
+                                callback.onFailure(e);
+                            }
+                        }
+                    }
                 }
-                JSONObject object = new JSONObject();
-                object.put("id", playerId);
-                HttpURLConnection connection = (HttpURLConnection)new URL(HOST + createRoom).openConnection();
-                connection.setRequestMethod("POST");
-                connection.getOutputStream().write(object.toString().getBytes());
-                String result = streamToString(connection.getInputStream());
-                onRoom = result.equals("success");
-                if(onRoom){
-                    roomId = playerId;
-                    client.subscribe(mqttTopic + "room/" + roomId, 0, roomMessageListener);
-                }
-                return onRoom;
-            }
+            }).start();
         }
 
-        public void leaveRoom() throws MqttException {
+        public void leaveRoom(final ActionCallback callback) {
             synchronized (this) {
-                if(!onRoom) {
+                if (roomId == null) {
                     return;
                 }
-                client.unsubscribe(mqttTopic+"room/"+roomId);
-                onRoom = false;
             }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (this) {
+                        try {
+                            JSONObject object = new JSONObject();
+                            object.put("id", playerId);
+                            object.put("status", MQTT_DISCONNECT_CODE);
+                            String strMsg = object.toString();
+                            MqttMessage message = new MqttMessage();
+                            message.setPayload(strMsg.getBytes());
+                            message.setQos(2);
+                            client.publish(mqttTopic + roomId, message);
+                            client.unsubscribe(mqttTopic + roomId);
+                            roomId = null;
+                            if(callback != null) {
+                                callback.onSuccess();
+                            }
+                        } catch (MqttException e) {
+                            if(callback != null) {
+                                callback.onFailure(e);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
         }
 
-        public void sendAction(String action) throws JSONException, MqttException {
-            if(client.isConnected()) {
-                JSONObject object = new JSONObject();
-                object.put("id", playerId);
-                object.put("status", 4);
-                object.put("action", action);
-                String strMsg = object.toString();
-                MqttMessage message = new MqttMessage();
-                message.setPayload(strMsg.getBytes());
-                client.publish(mqttTopic + "room/" + roomId, message);
+        public void sendAction(final String action) {
+            if(roomId == null) {
+                Toast.makeText(context, "not in room", Toast.LENGTH_SHORT).show();
+            }
+            else if(client != null && client.isConnected()) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject object = new JSONObject();
+                            object.put("id", playerId);
+                            object.put("status", MQTT_FIGHTING_CODE);
+                            object.put("action", action);
+                            String strMsg = object.toString();
+                            MqttMessage message = new MqttMessage();
+                            message.setPayload(strMsg.getBytes());
+                            message.setQos(2);
+                            client.publish(mqttTopic + roomId, message);
+                        } catch (JSONException | MqttException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             } else {
                 Log.e("error", "mqtt not connected");
             }
         }
+
+        interface RoomListCallBack {
+            void callback(List<RoomInfo> infoList);
+            void onError(Exception e);
+        }
         
-        public static List<RoomInfo> getRoomList() throws IOException, JSONException {
-            URLConnection connection = new URL(HOST + roomList).openConnection();
-            JSONArray array = streamToJsonArray(connection.getInputStream());
-            ArrayList<RoomInfo> infos = new ArrayList<>();
-            for(int i = 0; i < array.length(); ++i) {
-                JSONObject jsonObject = array.getJSONObject(i);
-                RoomInfo info = new RoomInfo();
-                info.player1 = jsonObject.getString("player1");
-                info.player2 = jsonObject.getString("player2");
-                info.roomId  = jsonObject.getString("roomname");
-                info.roomPlayerNum = jsonObject.getInt("playcou");
-                infos.add(info);
-            }
-            return infos;
+        public static void getRoomList(final RoomListCallBack callBack) {
+            if(callBack == null) { return; }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        URLConnection connection =  connection = new URL(HOST + roomList).openConnection();
+                        connection.setConnectTimeout(1000);
+                        connection.setReadTimeout(1000);
+                        JSONArray array = streamToJsonArray(connection.getInputStream());
+                        ArrayList<RoomInfo> infos = new ArrayList<>();
+                        for(int i = 0; i < array.length(); ++i) {
+                            JSONObject jsonObject = array.getJSONObject(i);
+                            RoomInfo info = new RoomInfo();
+                            if(jsonObject.has("player1")) {
+                                info.player1 = jsonObject.getString("player1");
+                            }
+                            if(jsonObject.has("player2")) {
+                                info.player2 = jsonObject.getString("player2");
+                            }
+                            if(jsonObject.has("roomname")) {
+                                info.roomId = jsonObject.getString("roomname");
+                            }
+                            if(jsonObject.has("playcou")) {
+                                info.roomPlayerNum = jsonObject.getInt("playcou");
+                            }
+                            infos.add(info);
+                        }
+                        callBack.callback(infos);
+                    } catch (IOException | JSONException e) {
+                        callBack.onError(e);
+                    }
+                }
+            }).start();
         }
     }
+
     private static ServerConnection connection;
     private final static Object lock = new Object();
     static ServerConnection getInstance(Context context) {

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.telecom.Call;
 
 import com.example.apple.beadgame.CatEnemy.Castle;
 import com.example.apple.beadgame.CatEnemy.CatCharacter;
@@ -14,7 +15,7 @@ import com.example.apple.beadgame.CatEnemy.TextCharacter;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONException;
 
-public class NetworkGame extends Thread{
+public class NetworkGame extends Thread {
     protected ConnectionManager.ServerConnection connection;
     protected GameManagerWithCounter gameManager;
     protected GameView gameView;
@@ -23,6 +24,7 @@ public class NetworkGame extends Thread{
     protected boolean allOver = false;
     protected Activity activity;
     protected Gamer gamer1, gamer2;
+    protected Castle myCastle, enemyCastle;
 
     public class GameHandler{
         private GameHandler(){}
@@ -35,11 +37,7 @@ public class NetworkGame extends Thread{
         }
 
         void addCharacter(CatCharacter character) {
-            try {
-                connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
-            } catch (JSONException | MqttException e) {
-                e.printStackTrace();
-            }
+            connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
             gameManager.regist(character);
         }
     }
@@ -50,20 +48,39 @@ public class NetworkGame extends Thread{
         }
     }
 
+    ConnectionManager.ServerConnection.GameActionsListener gameActionsListener = new ConnectionManager.ServerConnection.GameActionsListener() {
+        @Override
+        public void onEnemyAction(String action) {
+            // ignore
+        }
+
+        @Override
+        public void onGameEnd() {
+            if(myCastle.getHeal() > enemyCastle.getHeal()) {
+                NetworkGame.this.onGameEnd("Victory", false);
+            } else {
+                NetworkGame.this.onGameEnd("GAME OVER", false);
+            }
+        }
+    };
+
     public NetworkGame(Activity activity, GameManagerWithCounter gameManager, GameView gameView) {
         this.gameManager = gameManager;
         this.gameView = gameView;
         this.activity = activity;
         connection = ConnectionManager.getInstance(activity.getApplicationContext());
         init();
+        connection.addGameActionsListener(gameActionsListener);
     }
+
+
 
     private void init() {
         gameClear = false;
         gameOver = false;
         Bitmap a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.red);
-        int w = (int)(gameManager.getHeight() * ((float)a.getWidth() / a.getHeight()));
-        gameManager.regist(new Castle(
+        int w = 400;
+        gameManager.regist(myCastle = new Castle(
                 a,
                 1000,
                 0,
@@ -81,12 +98,12 @@ public class NetworkGame extends Thread{
                                 20));
                         NetworkGame.this.gameManager.pauseGame();
                         gameOver = true;
-                        onGameEnd("GAME OVER");
+                        onGameEnd("GAME OVER", true);
                     }
                 }));
         a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.blue);
         w = (int)(gameManager.getHeight() * ((float)a.getWidth() / a.getHeight()));
-        gameManager.regist(new Castle(
+        gameManager.regist(enemyCastle = new Castle(
                 a,
                 1000,
                 0,
@@ -104,7 +121,7 @@ public class NetworkGame extends Thread{
                                 20));
                         NetworkGame.this.gameManager.pauseGame();
                         gameClear = true;
-                        onGameEnd("Victory");
+                        onGameEnd("Victory", true);
                     }
                 }));
     }
@@ -134,6 +151,7 @@ public class NetworkGame extends Thread{
     void gamePause() {
         gamer1.gamePause();
         gamer2.gamePause();
+        gameManager.pauseGame();
     }
 
     void gameStop() {
@@ -144,43 +162,40 @@ public class NetworkGame extends Thread{
     void gameStart() {
         gamer1.gameStart();
         gamer2.gameStart();
+        gameManager.resumeGame();
     }
 
-    private void onGameEnd(final String gameState) {
-        this.gamePause();
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(gameManager.getContext());
-                dlgAlert.setMessage(String.format(
-                        gameState + "\n" +
-                                "your call %d cat\n" +
-                                "and kill %d enemy\n"
-                        ,
-                        gameManager.getRegistTagCount("RED TEAM") - 1,
-                        gameManager.getUnregistTagCount("BLUE TEAM")
-                ));
-                dlgAlert.setTitle("Game Score");
-                dlgAlert.setPositiveButton("Try Again", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        gameManager.cleanAllObject();
-                        gameManager.resumeGame();
-                        init();
-                        gameManager.updateScreen();
-                        NetworkGame.this.gameStart();
-
-                    }
-                });
-                dlgAlert.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        NetworkGame.this.allOver = true;
-                    }
-                });
-                dlgAlert.create().show();
+    private void onGameEnd(final String gameState, boolean sendMessage) {
+        if(!gameManager.isPaused()) {
+            this.gamePause();
+            if (sendMessage) {
+                connection.sendEndingMessage();
             }
-        });
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AlertDialog.Builder dlgAlert = new AlertDialog.Builder(gameManager.getContext());
+                    dlgAlert.setMessage(String.format(
+                            gameState + "\n" +
+                                    "your call %d cat\n" +
+                                    "and kill %d enemy\n"
+                            ,
+                            gameManager.getRegistTagCount("RED TEAM") - 1,
+                            gameManager.getUnregistTagCount("BLUE TEAM")
+                    ));
+                    dlgAlert.setTitle("Game Score");
+                    dlgAlert.setPositiveButton("Ok", null);
+                    dlgAlert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialogInterface) {
+                            activity.finish();
+                        }
+                    });
+                    NetworkGame.this.allOver = true;
+                    dlgAlert.create().show();
+                }
+            });
+        }
     }
 }
 

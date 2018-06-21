@@ -1,7 +1,6 @@
 package com.example.apple.beadgame;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 
@@ -9,6 +8,7 @@ import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
 
 public class MainActivity extends Activity {
     private GameManagerWithCounter gameManager;
+    ConnectionManager.ServerConnection connection = ConnectionManager.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
