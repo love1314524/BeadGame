@@ -1,10 +1,10 @@
 package com.example.apple.beadgame;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,7 +20,9 @@ public class WaitingRoom extends Activity {
         @Override
         public void onStartGame() {
             connection.removeWaitRoomActionsListener(waitRoomActionsListener);
-            startActivity(new Intent(WaitingRoom.this, MainActivity.class));
+            Intent intent = new Intent(WaitingRoom.this, MainActivity.class);
+            intent.putExtra("gameMode", 1);
+            startActivity(intent);
         }
 
         @Override
