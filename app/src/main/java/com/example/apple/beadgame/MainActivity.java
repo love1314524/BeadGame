@@ -10,6 +10,7 @@ public class MainActivity extends Activity {
     private GameManagerWithCounter gameManager;
     ConnectionManager.ServerConnection connection = ConnectionManager.getInstance(this);
 
+    CatGame game;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,7 +20,6 @@ public class MainActivity extends Activity {
         gameManager.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                CatGame game;
                 switch (getIntent().getIntExtra("gameMode", 0)) {
                     case 0:
                         game = new CatGame(MainActivity.this, gameManager);
@@ -42,5 +42,11 @@ public class MainActivity extends Activity {
             @Override
             public void surfaceDestroyed(SurfaceHolder surfaceHolder) { }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        game.gamePause();
+        finish();
     }
 }
