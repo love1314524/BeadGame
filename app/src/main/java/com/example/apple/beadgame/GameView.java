@@ -37,23 +37,38 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     private Bead beads[][];
     int m,n;
     int width,height,BitmapSize;
-    boolean TochFlag=true,GameFlag = true,isClear = true;
+    int combo = 0,comboX,comboY;
+    boolean GameFlag = true,isClear = true,comboFlag = false;
+    Bitmap bitmap_combo_left,bitmap_combo_mid,bitmap_combo_right;
     Bitmap b;
     NetworkGame.GameHandler gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
+
+    private static class Speed
+    {
+       static int MoveDownSpeed = 30;
+       static int RemoveSpeed = 300;
+    }
+
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
         holder = this.getHolder();
         holder.addCallback(this);
-
         beads = new Bead[size_x][size_y];
         Log.i("list",list.size()+"");
     }
     @Override
     public void surfaceCreated(final SurfaceHolder holder) {
+        bitmap_combo_right = BitmapFactory.decodeResource(getResources(),R.drawable.score_x);
+        bitmap_combo_right = Bitmap.createScaledBitmap(bitmap_combo_right,BitmapSize,BitmapSize,false);
+        comboX = width - BitmapSize*3/2;
+        comboY = height - BitmapSize*3/2;
+
+
         b = BitmapFactory.decodeResource(getResources(),R.drawable.blue_cat);
-        b = Bitmap.createScaledBitmap(b,100,100,false);
+        b = Bitmap.createScaledBitmap(b,BitmapSize,BitmapSize,false);
+
 
         CreateBead();
         DrawMoveBead();
@@ -61,6 +76,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
     }
+
+
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -83,13 +100,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         int row = (int)(x / BitmapSize);//計算行列
         int col = (int)(height - y)/BitmapSize;//計算行列
 
-        if(GameFlag && TochFlag)
+        if(GameFlag)
             switch(event.getAction())
             {
                 case MotionEvent.ACTION_DOWN:
                     if(row >= size_x | col >= size_y | row < 0 | col < 0)
                         break;
                     else {
+                        combo = 0;
                         Log.i("ACTION_DOWN", "ACTION_DOWN" + beads[row][col].getKind());
                         m = row;
                         n = col;
@@ -122,7 +140,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     }
                 case MotionEvent.ACTION_UP:
                     Log.i("ACTION_UP", "ACTION_UP");
-                    TochFlag = false;
+                    GameFlag = false;
+                    comboFlag = true;
+                    combo = 0;
                     SearchBead();
 
                     return true;
@@ -240,7 +260,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
             }
 
 
+            //消除隊列
             list.add(new ArrayList<List<Map<String, Integer>>>());
+
+
             //設為群組
             int group = -1;
             for(int k = 0;k < list.size() - 1;k++){
@@ -256,28 +279,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                         beads[x][y].group = ++group;
                     }
 
-                    for (int j=0;j < list.get(k).get(0).size() ; j++){
-
-                        int a = list.get(k).get(0).get(j).get("x");
-                        int b = list.get(k).get(0).get(j).get("y");
-
-                        if((Math.abs(x-a) == 1 && y==b) | (Math.abs(y-b) == 1 && x == a)){
-                            if(beads[x][y].group == -1)
-                                if(beads[a][b].group != -1) {
-                                    beads[x][y].group = beads[a][b].group;
-                                    list.get(list.size()-1).remove(group--);
-                                }
-                                else
-                                    beads[a][b].group = beads[x][y].group;
-                            else
-                                beads[a][b].group = beads[x][y].group;
-                        }
-                    }
+                    checkgroup(x,y,k);
                 }
             }
 
 
-
+            //群組加到消除隊列
             for(int k = 0; k < list.size() -1 ;k++){
                 for(int i = 0;i < list.get(k).get(0).size();i++){
                     int x = list.get(k).get(0).get(i).get("x");
@@ -298,14 +305,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     int x = list.get(list.size()-1).get(g).get(j).get("x");
                     int y = list.get(list.size()-1).get(g).get(j).get("y");
 
-                    beads[x][y].state = false;
+//                    beads[x][y].state = false;
                     beads[x][y].kind = -1;
                     beads[x][y].group = -1;
                     beads[x][y].setBitmap();
                 }
                 try {
+                    combo++;
+
+                    bitmap_combo_left = setComboBitmap(combo/10);
+                    bitmap_combo_mid = setComboBitmap(combo % 10);
+
                     DrawBead();
-                    Thread.sleep(300);
+                    Thread.sleep(Speed.RemoveSpeed);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -316,6 +328,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
             while (list.size() > 0)
                 list.remove(0);
         downBead();
+    }
+
+    //判斷群組
+    public void checkgroup(int x,int y,int k){
+
+        for (int j=0;j < list.get(k).get(0).size() ; j++){
+
+            int a = list.get(k).get(0).get(j).get("x");
+            int b = list.get(k).get(0).get(j).get("y");
+
+            if((Math.abs(x-a) == 1 && y==b) | (Math.abs(y-b) == 1 && x == a)){
+                if(beads[a][b].group != beads[x][y].group) {
+                    beads[a][b].group = beads[x][y].group;
+                    checkgroup(a, b, k);
+                }
+            }
+        }
+
     }
 
     //珠子向下移動
@@ -380,7 +410,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 beads[i][j].draw(canvas);
             }
 
-            //canvas.drawBitmap(b, 100, 100, null);
+        if(comboFlag) {
+            if(combo >= 10)
+                canvas.drawBitmap(bitmap_combo_left, comboX-BitmapSize*2, comboY, null);
+
+            canvas.drawBitmap(bitmap_combo_mid, comboX-BitmapSize,comboY , null);
+            canvas.drawBitmap(bitmap_combo_right, comboX, comboY, null);
+        }
 
         holder.unlockCanvasAndPost(canvas);
     }
@@ -395,26 +431,76 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     flag = false;
                     for (int i = 0; i < size_x; i++) {
                         for (int j = 0; j < size_y; j++) {
-                            if (beads[i][j].move(j, height,30)) {
+                            if (beads[i][j].move(j, height,Speed.MoveDownSpeed)) {
                                 flag = true;
                             }
                         }
                     }
                     DrawBead();
-                    try {
-                        Thread.sleep(5);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
                 if(!isClear){
                     SearchBead();
                 }
                 else{
-                    TochFlag = true;
+
+                    comboFlag = false;
+                    GameFlag = true;
+                    new Thread(){
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(3000);
+                                DrawBead();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }.start();
                 }
             }
         }.start();
+    }
+
+    //設定combo圖片
+    public Bitmap setComboBitmap(int combo){
+        Bitmap bitmap;
+        switch (combo){
+            case 0:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_0);
+                break;
+            case 1:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_1);
+                break;
+            case 2:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_2);
+                break;
+            case 3:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_3);
+                break;
+            case 4:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_4);
+                break;
+            case 5:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_5);
+                break;
+            case 6:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_6);
+                break;
+            case 7:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_7);
+                break;
+            case 8:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_8);
+                break;
+            case 9:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_9);
+                break;
+            default:
+                bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.score_x);
+
+        }
+        bitmap = Bitmap.createScaledBitmap(bitmap,BitmapSize,BitmapSize,false);
+        return bitmap;
     }
 
     public void SummonCat(){
@@ -428,19 +514,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
 
     @Override
     public void gameStart() {
-        TochFlag = true;
         GameFlag = true;
     }
 
     @Override
     public void gamePause() {
         GameFlag = false;
-        TochFlag = false;
     }
 
     @Override
     public void gameStop() {
         GameFlag = false;
-        TochFlag = false;
     }
 }

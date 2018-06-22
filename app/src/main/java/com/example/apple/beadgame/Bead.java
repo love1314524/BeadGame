@@ -65,6 +65,8 @@ public class Bead{
                 bitmap = BitmapFactory.decodeResource(context.getResources(),R.drawable.love);
         }
         bitmap = Bitmap.createScaledBitmap(bitmap,size,size,false);
+
+
     }
     public void setBackgroundPosition(int x,int y){
         this.bcx = x;
