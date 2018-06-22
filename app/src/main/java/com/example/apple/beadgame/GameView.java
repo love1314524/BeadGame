@@ -143,7 +143,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         }
 
 
-
+        //檢查消珠
         for(int i=0;i<size_x;i++)
             for(int j=0;j<size_y;j++){
                 if(j+1 >=size_y | j-1 <0){
@@ -239,27 +239,79 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 }
             }
 
-            //消除珠子
-            for(int k=0;k<list.size();k++) {
-                for (int i = 0; i < list.get(k).size(); i++) {
-                    for (int j = 0; j < list.get(k).get(i).size(); j++) {
-                        int x = list.get(k).get(i).get(j).get("x");
-                        int y = list.get(k).get(i).get(j).get("y");
-                        beads[x][y].state = false;
-                        beads[x][y].kind = -1;
-                        beads[x][y].setBitmap();
-                    }
-                    try {
-                        DrawBead();
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //SummonCat();
-                    //SummonCat();
-                    //SummonCat();
 
+            list.add(new ArrayList<List<Map<String, Integer>>>());
+            //設為群組
+            int group = -1;
+            for(int k = 0;k < list.size() - 1;k++){
+                for(int i = 0;i< list.get(k).get(0).size();i++){
+                    int x = list.get(k).get(0).get(i).get("x");
+                    int y = list.get(k).get(0).get(i).get("y");
+                    if(i == 0){
+                        list.get(list.size()-1).add(new ArrayList<Map<String, Integer>>());
+                        beads[x][y].group = ++group;
+                    }
+                    else if(beads[x][y].group == -1) {
+                        list.get(list.size()-1).add(new ArrayList<Map<String, Integer>>());
+                        beads[x][y].group = ++group;
+                    }
+
+                    for (int j=0;j < list.get(k).get(0).size() ; j++){
+
+                        int a = list.get(k).get(0).get(j).get("x");
+                        int b = list.get(k).get(0).get(j).get("y");
+
+                        if((Math.abs(x-a) == 1 && y==b) | (Math.abs(y-b) == 1 && x == a)){
+                            if(beads[x][y].group == -1)
+                                if(beads[a][b].group != -1) {
+                                    beads[x][y].group = beads[a][b].group;
+                                    list.get(list.size()-1).remove(group--);
+                                }
+                                else
+                                    beads[a][b].group = beads[x][y].group;
+                            else
+                                beads[a][b].group = beads[x][y].group;
+                        }
+                    }
                 }
+            }
+
+
+
+            for(int k = 0; k < list.size() -1 ;k++){
+                for(int i = 0;i < list.get(k).get(0).size();i++){
+                    int x = list.get(k).get(0).get(i).get("x");
+                    int y = list.get(k).get(0).get(i).get("y");
+                    int bead_group =  beads[x][y].group;
+
+                    list.get(list.size()-1).get(bead_group).add(new HashMap<String, Integer>());
+                    int index =  list.get(list.size()-1).get(bead_group).size() - 1;
+
+                    list.get(list.size()-1).get(bead_group).get(index).put("x",x);
+                    list.get(list.size()-1).get(bead_group).get(index).put("y",y);
+                }
+            }
+
+            //消除珠子
+            for(int g=0;g<= group;g++) {
+                for (int j = 0; j < list.get(list.size()-1).get(g).size(); j++) {
+                    int x = list.get(list.size()-1).get(g).get(j).get("x");
+                    int y = list.get(list.size()-1).get(g).get(j).get("y");
+
+                    beads[x][y].state = false;
+                    beads[x][y].kind = -1;
+                    beads[x][y].group = -1;
+                    beads[x][y].setBitmap();
+                }
+                try {
+                    DrawBead();
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //SummonCat();
+                //SummonCat();
+                //SummonCat();
             }
             while (list.size() > 0)
                 list.remove(0);

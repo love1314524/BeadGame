@@ -22,6 +22,7 @@ public class Bead{
     int h,kind,size; //圖片種類 大小
     int x,y,nextY,bcx,bcy;
     Bitmap bitmap,background_bitmap;
+    int group;
     boolean state = true,check;
 
     Context context;
@@ -34,7 +35,7 @@ public class Bead{
         this.h = h;
         this.nextY = y;
         this.check = false;
-
+        this.group = -1;
         newKind();
         setBitmap();
     }
