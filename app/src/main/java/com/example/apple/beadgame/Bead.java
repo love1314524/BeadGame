@@ -23,6 +23,7 @@ public class Bead{
     int x,y,nextY,bcx,bcy;
     Bitmap bitmap,background_bitmap;
     boolean state = true,check;
+
     Context context;
     public Bead(Context context,int size,int x,int y,int h){
 

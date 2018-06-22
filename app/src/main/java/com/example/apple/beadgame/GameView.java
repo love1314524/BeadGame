@@ -124,24 +124,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     Log.i("ACTION_UP", "ACTION_UP");
                     TochFlag = false;
                     SearchBead();
-                    new Thread(){
-                        @Override
-                        public void run() {
-                            int i=5;
-                            while ( i >0)
-                                try {
-                                    Log.i("time",i+"");
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                finally {
-                                    i--;
-                                }
-                            TochFlag = true;
-                            Log.i("TochFlag ",TochFlag+"");
-                        }
-                    }.start();
+
                     return true;
                 default:
                     Log.i(event.getAction()+"",event.getAction()+"");
@@ -154,11 +137,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         int list_index;
         int map_index;
 
-        list.add(new ArrayList<List<Map<String, Integer>>>());
-        list.add(new ArrayList<List<Map<String, Integer>>>());
-        list.add(new ArrayList<List<Map<String, Integer>>>());
-        list.add(new ArrayList<List<Map<String, Integer>>>());
-        list.add(new ArrayList<List<Map<String, Integer>>>());
+        for(int l=0;l<5;l++){
+            list.add(new ArrayList<List<Map<String, Integer>>>());
+            list.get(l).add(new ArrayList<Map<String, Integer>>());
+        }
+
+
 
         for(int i=0;i<size_x;i++)
             for(int j=0;j<size_y;j++){
@@ -166,28 +150,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 }
                 else if(beads[i][j].kind == beads[i][j+1].kind && beads[i][j].kind == beads[i][j-1].kind)
                 {
-                    list_index = list.get(beads[i][j].kind).size();
-                    if(list_index != 0)
-                        map_index = list.get(beads[i][j].kind).get(list_index-1).size()-1;
-                    else
-                        map_index = -1;
+                    list_index = 0;
+                    map_index = list.get(beads[i][j].kind).get(list_index).size() -1;
 
                     if(beads[i][j].check|beads[i][j+1].check|beads[i][j-1].check)
                     {
                         for(int k=j-1;k<=j+1;k++)
                             if(!beads[i][k].check) {
-                                list.get(beads[i][j].kind).get(list_index-1).add(new HashMap<String, Integer>());
+                                list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                                 map_index++;
-                                list.get(beads[i][j].kind).get(list_index-1).get(map_index).put("x", i);
-                                list.get(beads[i][j].kind).get(list_index-1).get(map_index).put("y", k);
-                                beads[i][k].check =true;
+                                list.get(beads[i][j].kind).get(list_index).get(map_index).put("x", i);
+                                list.get(beads[i][j].kind).get(list_index).get(map_index).put("y", k);
+                                beads[i][k].check = true;
                             }
                     }
                     else
                     {
-                        map_index = -1;
-                        list.get(beads[i][j].kind).add( new ArrayList<Map<String, Integer>>());
-
                         list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                         map_index++;
 
@@ -218,28 +196,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 }
                 else if(beads[i][j].kind == beads[i+1][j].kind && beads[i][j].kind == beads[i-1][j].kind){
 
-                    list_index = list.get(beads[i][j].kind).size();
-                    if(list_index != 0)
-                        map_index = list.get(beads[i][j].kind).get(list_index-1).size()-1;
-                    else
-                        map_index = -1;
+                    list_index = 0;
+                    map_index = list.get(beads[i][j].kind).get(list_index).size() -1;
+
 
                     if(beads[i][j].check|beads[i+1][j].check|beads[i-1][j].check)
                     {
                         for(int k=i-1;k<=i+1;k++)
                             if(!beads[k][j].check) {
-                                list.get(beads[i][j].kind).get(list_index-1).add(new HashMap<String, Integer>());
+
+                                list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                                 map_index++;
-                                list.get(beads[i][j].kind).get(list_index-1).get(map_index).put("x", k);
-                                list.get(beads[i][j].kind).get(list_index-1).get(map_index).put("y", j);
-                                beads[k][j].check =true;
+                                list.get(beads[i][j].kind).get(list_index).get(map_index).put("x", k);
+                                list.get(beads[i][j].kind).get(list_index).get(map_index).put("y", j);
+                                beads[k][j].check = true;
                             }
                     }
                     else
                     {
-                        map_index = -1;
-                        list.get(beads[i][j].kind).add( new ArrayList<Map<String, Integer>>());
-
                         list.get(beads[i][j].kind).get(list_index).add(new HashMap<String, Integer>());
                         map_index++;
 
@@ -264,6 +238,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     }
                 }
             }
+
             //消除珠子
             for(int k=0;k<list.size();k++) {
                 for (int i = 0; i < list.get(k).size(); i++) {
@@ -280,9 +255,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    SummonCat();
-                    SummonCat();
-                    SummonCat();
+                    //SummonCat();
+                    //SummonCat();
+                    //SummonCat();
 
                 }
             }
@@ -345,7 +320,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         canvas.drawColor(Color.BLACK);
         for(int i=0;i<size_x;i++)
             for (int j=0;j<size_y;j++) {
-
                 beads[i][j].drawBackground(canvas);
         }
         for(int i=0;i<size_x;i++)
@@ -383,6 +357,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 }
                 if(!isClear){
                     SearchBead();
+                }
+                else{
+                    TochFlag = true;
                 }
             }
         }.start();
