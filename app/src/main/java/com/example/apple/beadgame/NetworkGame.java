@@ -77,7 +77,6 @@ public class NetworkGame extends CatGame {
                                 NetworkGame.this.gameManager.getWidth() / 2 - 60,
                                 NetworkGame.this.gameManager.getHeight() / 2 ,
                                 20));
-                        NetworkGame.this.gameManager.pauseGame();
                         gameOver = true;
                         onGameEnd("GAME OVER", true);
                     }
@@ -100,7 +99,6 @@ public class NetworkGame extends CatGame {
                                 NetworkGame.this.gameManager.getWidth() /  2 - 60,
                                 NetworkGame.this.gameManager.getHeight() / 2,
                                 20));
-                        NetworkGame.this.gameManager.pauseGame();
                         gameClear = true;
                         onGameEnd("Victory", true);
                     }

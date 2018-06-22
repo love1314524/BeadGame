@@ -54,4 +54,6 @@ public class NetworkGamer implements Gamer {
     public void gameStop() {
         connection.removeGameActionsListener(listener);
     }
+
+
 }
