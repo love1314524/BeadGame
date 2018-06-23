@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -43,6 +46,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     Bitmap b;
     NetworkGame.GameHandler gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
+    Sound sound;
 
     private static class Speed
     {
@@ -57,9 +61,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         holder.addCallback(this);
         beads = new Bead[size_x][size_y];
         Log.i("list",list.size()+"");
+
+        sound = new Sound(getContext());
     }
     @Override
     public void surfaceCreated(final SurfaceHolder holder) {
+
         bitmap_combo_right = BitmapFactory.decodeResource(getResources(),R.drawable.score_x);
         bitmap_combo_right = Bitmap.createScaledBitmap(bitmap_combo_right,BitmapSize,BitmapSize,false);
         comboX = width - BitmapSize*3/2;
@@ -108,6 +115,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                         break;
                     else {
                         combo = 0;
+                        bitmap_combo_left = setComboBitmap(combo/10);
+                        bitmap_combo_mid = setComboBitmap(combo % 10);
+                        DrawBead();
+
                         Log.i("ACTION_DOWN", "ACTION_DOWN" + beads[row][col].getKind());
                         m = row;
                         n = col;
@@ -131,7 +142,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                             int kind = beads[m][n].kind;
                             beads[m][n].kind = beads[row][col].kind;
                             beads[row][col].kind = kind;
-
+                            if(sound.move_flag) {
+                                sound.play_move();
+                                sound.wait_move();
+                            }
                             DrawBead();
                         }
                         m = row;
@@ -284,6 +298,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
             }
 
 
+
             //群組加到消除隊列
             for(int k = 0; k < list.size() -1 ;k++){
                 for(int i = 0;i < list.get(k).get(0).size();i++){
@@ -311,11 +326,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     beads[x][y].setBitmap();
                 }
                 try {
-                    combo++;
 
+                    combo++;
                     bitmap_combo_left = setComboBitmap(combo/10);
                     bitmap_combo_mid = setComboBitmap(combo % 10);
-
+                    sound.play_hit();
                     DrawBead();
                     Thread.sleep(Speed.RemoveSpeed);
                 } catch (InterruptedException e) {
@@ -327,6 +342,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
             }
             while (list.size() > 0)
                 list.remove(0);
+
+
+        if(sound.combo_flag) {
+            sound.play_combo();
+            sound.wait_combo();
+        }
+
         downBead();
     }
 
