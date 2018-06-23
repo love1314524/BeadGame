@@ -41,6 +41,8 @@ public class RedCat extends CatCharacter {
 
     public float getAttackSpeed() { return attackSpeed; }
 
+    float moveCount = 0;
+
     @Override
     protected void update(int screenWidth, int screenHeight) {
         List<Character> collisionList = this.getCollisionList();
@@ -63,7 +65,9 @@ public class RedCat extends CatCharacter {
         if(!hasTarget) {
             timer = 0;
             if(animation != null) animation.playAnimation(WALK_ANIMATION);
-            moveRight(screenWidth, stepSize);
+            moveCount += stepSize * getDelTime();
+            moveRight(screenWidth, (int) (moveCount));
+            moveCount = moveCount - (int)moveCount;
         }
     }
 

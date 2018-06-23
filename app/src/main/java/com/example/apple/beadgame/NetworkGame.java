@@ -11,59 +11,57 @@ import com.example.apple.beadgame.CatEnemy.CatCharacter;
 import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
 import com.example.apple.beadgame.CatEnemy.TextCharacter;
 
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.json.JSONException;
+public class NetworkGame extends CatGame {
+    protected ConnectionManager.ServerConnection connection;
 
-public class NetworkGame extends Thread{
-    protected ServerConnection connection;
-    protected GameManagerWithCounter gameManager;
-    protected GameView gameView;
-    protected boolean gameClear = false;
-    protected boolean gameOver = false;
-    protected boolean allOver = false;
-    protected Activity activity;
-    protected Gamer gamer1, gamer2;
-
-    public class GameHandler{
-        private GameHandler(){}
-        public int getScreenHeight() {
-            return gameManager.getHeight();
-        }
-
-        public int getScreenWidth() {
-            return gameManager.getWidth();
-        }
-
+    class GameHandlerWithNetwork extends GameHandler {
         void addCharacter(CatCharacter character) {
-            try {
-                connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
-            } catch (JSONException | MqttException e) {
-                e.printStackTrace();
+            connection.sendAction(character.getCatCharacterName() + " " + character.getHeal() + " " + character.getAttack());
+            gameManager.regist(character);
+        }
+    }
+
+    ConnectionManager.ServerConnection.GameActionsListener gameActionsListener = new ConnectionManager.ServerConnection.GameActionsListener() {
+        @Override
+        public void onEnemyAction(String action) {
+            // ignore
+        }
+
+        @Override
+        public void onGameEnd() {
+            if(myCastle.getHeal() > enemyCastle.getHeal()) {
+                NetworkGame.this.onGameEnd("Victory", false);
+            } else {
+                NetworkGame.this.onGameEnd("GAME OVER", false);
             }
-            gameManager.regist(character);
         }
+    };
+
+    public NetworkGame(Activity activity, GameManagerWithCounter gameManager) {
+        super(activity, gameManager);
+        connection = ConnectionManager.getInstance(activity.getApplicationContext());
+        connection.addGameActionsListener(gameActionsListener);
     }
 
-    class GameHandlerWithNoNetwork extends GameHandler {
-        void addCharacter(CatCharacter character) {
-            gameManager.regist(character);
-        }
+    @Override
+    public void setPlayer1(Gamer gameView) {
+        gameView.setGameHandler(new GameHandlerWithNetwork());
+        gamer1 = gameView;
     }
 
-    public NetworkGame(Activity activity, GameManagerWithCounter gameManager, GameView gameView) {
-        this.gameManager = gameManager;
-        this.gameView = gameView;
-        this.activity = activity;
-        connection = new ServerConnection(activity.getApplicationContext());
-        init();
+    @Override
+    public void setPlayer2(Gamer gamer) {
+        gamer.setGameHandler(new GameHandler());
+        gamer2 = gamer;
     }
 
-    private void init() {
+    @Override
+    protected void init() {
         gameClear = false;
         gameOver = false;
         Bitmap a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.red);
-        int w = (int)(gameManager.getHeight() * ((float)a.getWidth() / a.getHeight()));
-        gameManager.regist(new Castle(
+        int w = 400;
+        gameManager.regist(myCastle = new Castle(
                 a,
                 1000,
                 0,
@@ -81,12 +79,12 @@ public class NetworkGame extends Thread{
                                 20));
                         NetworkGame.this.gameManager.pauseGame();
                         gameOver = true;
-                        onGameEnd("GAME OVER");
+                        onGameEnd("GAME OVER", true);
                     }
                 }));
         a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.blue);
         w = (int)(gameManager.getHeight() * ((float)a.getWidth() / a.getHeight()));
-        gameManager.regist(new Castle(
+        gameManager.regist(enemyCastle = new Castle(
                 a,
                 1000,
                 0,
@@ -104,84 +102,42 @@ public class NetworkGame extends Thread{
                                 20));
                         NetworkGame.this.gameManager.pauseGame();
                         gameClear = true;
-                        onGameEnd("Victory");
+                        onGameEnd("Victory", true);
                     }
                 }));
     }
 
-    @Override
-    public void run() {
-        gameStart();
-        while(!allOver) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    protected void onGameEnd(final String gameState, boolean sendMessage) {
+        if(!gameManager.isPaused()) {
+            this.gamePause();
+            if (sendMessage) {
+                connection.sendEndingMessage();
             }
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AlertDialog.Builder dlgAlert = new AlertDialog.Builder(gameManager.getContext());
+                    dlgAlert.setMessage(String.format(
+                            gameState + "\n" +
+                                    "your call %d cat\n" +
+                                    "and kill %d enemy\n"
+                            ,
+                            gameManager.getRegistTagCount("RED TEAM") - 1,
+                            gameManager.getUnregistTagCount("BLUE TEAM")
+                    ));
+                    dlgAlert.setTitle("Game Score");
+                    dlgAlert.setPositiveButton("Ok", null);
+                    dlgAlert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialogInterface) {
+                            activity.finish();
+                        }
+                    });
+                    NetworkGame.this.allOver = true;
+                    dlgAlert.create().show();
+                }
+            });
         }
-    }
-
-
-    public void setPlayer1(Gamer gameView) {
-        gameView.setGameHandler(new GameHandler());
-        gamer1 = gameView;
-    }
-
-    public void setPlayer2(Gamer gamer) {
-        gamer.setGameHandler(new GameHandlerWithNoNetwork());
-        gamer2 = gamer;
-    }
-
-    void gamePause() {
-        gamer1.gamePause();
-        gamer2.gamePause();
-    }
-
-    void gameStop() {
-        gamer1.gameStop();
-        gamer2.gameStop();
-    }
-
-    void gameStart() {
-        gamer1.gameStart();
-        gamer2.gameStart();
-    }
-
-    private void onGameEnd(final String gameState) {
-        this.gamePause();
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(gameManager.getContext());
-                dlgAlert.setMessage(String.format(
-                        gameState + "\n" +
-                                "your call %d cat\n" +
-                                "and kill %d enemy\n"
-                        ,
-                        gameManager.getRegistTagCount("RED TEAM") - 1,
-                        gameManager.getUnregistTagCount("BLUE TEAM")
-                ));
-                dlgAlert.setTitle("Game Score");
-                dlgAlert.setPositiveButton("Try Again", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        gameManager.cleanAllObject();
-                        gameManager.resumeGame();
-                        init();
-                        gameManager.updateScreen();
-                        NetworkGame.this.gameStart();
-
-                    }
-                });
-                dlgAlert.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        NetworkGame.this.allOver = true;
-                    }
-                });
-                dlgAlert.create().show();
-            }
-        });
     }
 }
 

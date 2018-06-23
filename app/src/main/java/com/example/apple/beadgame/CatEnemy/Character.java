@@ -45,7 +45,10 @@ public abstract class Character {
     }
 
     final float getDelTime() {
-        return (float)(System.currentTimeMillis() - previousTime) / 1000;
+        if(previousTime != 0) {
+            return (float) (System.currentTimeMillis() - previousTime) / 1000;
+        }
+        return 0;
     }
     /***************************************************/
 

@@ -15,16 +15,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.example.apple.beadgame.CatEnemy.BigOrangeCat;
-import com.example.apple.beadgame.CatEnemy.GameManager;
-import com.example.apple.beadgame.CatEnemy.GameManagerWithCounter;
-import com.example.apple.beadgame.CatEnemy.Level;
-import com.example.apple.beadgame.CatEnemy.MidBlueCat;
-import com.example.apple.beadgame.CatEnemy.RedCat;
-import com.example.apple.beadgame.CatEnemy.SmallRedCat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -336,15 +329,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                //SummonCat();
-                //SummonCat();
-                //SummonCat();
+                for(int i = 0; i<= combo/3 ;i++ )
+                    SummonCat();
+
             }
             while (list.size() > 0)
                 list.remove(0);
 
 
         if(sound.combo_flag) {
+
             sound.play_combo();
             sound.wait_combo();
         }
@@ -536,16 +530,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
 
     @Override
     public void gameStart() {
+        Log.i("gameStart","gameStart");
         GameFlag = true;
     }
 
     @Override
     public void gamePause() {
+        Log.i("gamePause","gamePause");
+
         GameFlag = false;
     }
 
     @Override
     public void gameStop() {
+        Log.i("gameStop","gameStop");
         GameFlag = false;
     }
 }

@@ -34,6 +34,8 @@ public class BlueCat extends CatCharacter {
 
     public float getAttackSpeed() { return attackSpeed; }
 
+    float moveCount = 0;
+
     @Override
     protected void update(int screenWidth, int screenHeight) {
         List<Character> collisionList = this.getCollisionList();
@@ -56,7 +58,9 @@ public class BlueCat extends CatCharacter {
         if(!hasTarget) {
             timer = 0;
             if(animation != null) animation.playAnimation(WALK_ANIMATION);
-            moveLeft(stepSize);
+            moveCount += stepSize * getDelTime();
+            moveLeft((int) (moveCount));
+            moveCount = moveCount - (int)moveCount;
         }
     }
 
