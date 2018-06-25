@@ -15,6 +15,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         gameManager = findViewById(R.id.WarCatGameManager);
         final GameView gameView = findViewById(R.id.GameView);
         gameManager.getHolder().addCallback(new SurfaceHolder.Callback() {
