@@ -20,7 +20,7 @@ public class Bead{
                 YELLOW = 4;
     }
     int h,kind,size; //圖片種類 大小
-    int x,y,nextY,bcx,bcy;
+    int x,y,bcx,bcy;
     Bitmap bitmap,background_bitmap;
     int group;
     boolean state = true,check;
@@ -33,7 +33,6 @@ public class Bead{
         this.x = x;
         this.y = y;
         this.h = h;
-        this.nextY = y;
         this.check = false;
         this.group = -1;
         newKind();

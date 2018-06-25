@@ -321,7 +321,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     int x = list.get(list.size()-1).get(g).get(j).get("x");
                     int y = list.get(list.size()-1).get(g).get(j).get("y");
 
-//                    beads[x][y].state = false;
+                    beads[x][y].state = false;
                     beads[x][y].kind = -1;
                     beads[x][y].group = -1;
                     beads[x][y].setBitmap();
@@ -471,17 +471,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
 
                     comboFlag = false;
                     TouchFlag = true;
-                    new Thread(){
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(3000);
-                                DrawBead();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }.start();
                 }
             }
         }.start();
