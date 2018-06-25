@@ -12,9 +12,9 @@ import java.util.Random;
 
 public class Sound {
 
-    SoundPool sound1,sound2,sound3;
+    SoundPool sound1,sound2;
 
-    int move_sound,hit_sound,combo_sound[],background_sound;
+    int move_sound,hit_sound,combo_sound[];
     boolean move_flag,combo_flag;
     Context context;
 
@@ -22,9 +22,6 @@ public class Sound {
         this.context = context;
         sound1 = new SoundPool(1, AudioManager.STREAM_MUSIC, 5);
         sound2 = new SoundPool(1, AudioManager.STREAM_MUSIC, 5);
-        sound3 =  new SoundPool(1, AudioManager.STREAM_MUSIC, 5);
-
-        //background_sound = sound3.load(context, R.raw. , 1);
 
         combo_sound = new int[7];
 
@@ -33,8 +30,8 @@ public class Sound {
         combo_sound[2] = sound1.load(context, R.raw.comboburst_3 , 1);
         combo_sound[3] = sound1.load(context, R.raw.comboburst_4 , 1);
         combo_sound[4] = sound1.load(context, R.raw.comboburst_5 , 1);
-        combo_sound[5] = sound1.load(context, R.raw.comboburst_6 , 1);
-        combo_sound[6] = sound1.load(context, R.raw.comboburst_7 , 1);
+        //combo_sound[5] = sound1.load(context, R.raw.comboburst_6 , 1);
+        //combo_sound[6] = sound1.load(context, R.raw.comboburst_7 , 1);
 
         combo_flag = true;
 
@@ -44,13 +41,11 @@ public class Sound {
         move_sound = sound2.load(context, R.raw.move_sound , 1);
 
     }
-    public void play_background(){
-        sound3.play(background_sound,1,1,0,1,1);
-    }
+
 
     public void play_combo(){
 
-        int i = (int)(Math.random()*10000 % 7);
+        int i = (int)(Math.random()*10000 % 5);
 
 
         sound1.play(combo_sound[i], 1, 1, 0, 0, 1);

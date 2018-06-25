@@ -40,6 +40,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     NetworkGame.GameHandler gameManager;
     List<List<List<Map<String,Integer>>>> list = new ArrayList<>();
     Sound sound;
+    MediaPlayer mediaPlayer;
 
     private static class Speed
     {
@@ -53,10 +54,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         holder = this.getHolder();
         holder.addCallback(this);
         beads = new Bead[size_x][size_y];
-        Log.i("list",list.size()+"");
+        Log.i("list", list.size() + "");
 
         sound = new Sound(getContext());
+
+
+        mediaPlayer = MediaPlayer.create(context, R.raw.failsound3);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setLooping(true);
+
+
     }
+
     @Override
     public void surfaceCreated(final SurfaceHolder holder) {
 
@@ -82,7 +91,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
     }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -531,12 +539,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     @Override
     public void gameStart() {
         Log.i("gameStart","gameStart");
+        mediaPlayer.start();
+
         GameFlag = true;
     }
 
     @Override
     public void gamePause() {
         Log.i("gamePause","gamePause");
+        mediaPlayer.pause();
 
         GameFlag = false;
     }
@@ -544,6 +555,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     @Override
     public void gameStop() {
         Log.i("gameStop","gameStop");
+        mediaPlayer.stop();
+
         GameFlag = false;
     }
 }
