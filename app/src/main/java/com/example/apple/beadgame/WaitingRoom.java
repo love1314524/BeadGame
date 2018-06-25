@@ -19,7 +19,13 @@ public class WaitingRoom extends Activity {
     ConnectionManager.ServerConnection.WaitRoomActionsListener waitRoomActionsListener = new ConnectionManager.ServerConnection.WaitRoomActionsListener() {
         @Override
         public void onStartGame() {
-            connection.removeWaitRoomActionsListener(waitRoomActionsListener);
+            isReady = false;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    readyButton.setText(getString(R.string.ready));
+                }
+            });
             Intent intent = new Intent(WaitingRoom.this, MainActivity.class);
             intent.putExtra("gameMode", 1);
             startActivity(intent);
@@ -75,12 +81,14 @@ public class WaitingRoom extends Activity {
                 @Override
                 public void run() {
                     Toast.makeText(WaitingRoom.this, WaitingRoom.this.enemyName + getString(R.string.enemy_joined), Toast.LENGTH_SHORT).show();
+                    enemyStatesView.setText(String.format("%s\n%s", WaitingRoom.this.enemyName, getString(R.string.enemy_not_ready)));
                 }
             });
         }
     };
 
     TextView enemyStatesView;
+    Button readyButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +98,8 @@ public class WaitingRoom extends Activity {
             Toast.makeText(this, "Not on room", Toast.LENGTH_SHORT).show();
             finish();
         }
+
+        readyButton = findViewById(R.id.ready_button);
         connection.addWaitRoomActionsListener(waitRoomActionsListener);
         enemyStatesView = findViewById(R.id.enemy_states);
 
@@ -116,6 +126,12 @@ public class WaitingRoom extends Activity {
         }
         isReady = !isReady;
         ((Button)view).setText(text);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        connection.removeWaitRoomActionsListener(waitRoomActionsListener);
     }
 
     @Override

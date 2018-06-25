@@ -34,7 +34,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     int m,n;
     int width,height,BitmapSize;
     int combo = 0,comboX,comboY;
-    boolean GameFlag = true,isClear = true,comboFlag = false;
+    boolean GameFlag = true,TouchFlag = true,isClear = true,comboFlag = false;
     Bitmap bitmap_combo_left,bitmap_combo_mid,bitmap_combo_right;
     Bitmap b;
     NetworkGame.GameHandler gameManager;
@@ -108,7 +108,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         int row = (int)(x / BitmapSize);//計算行列
         int col = (int)(height - y)/BitmapSize;//計算行列
 
-        if(GameFlag)
+        if(GameFlag && TouchFlag)
             switch(event.getAction())
             {
                 case MotionEvent.ACTION_DOWN:
@@ -155,7 +155,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                     }
                 case MotionEvent.ACTION_UP:
                     Log.i("ACTION_UP", "ACTION_UP");
-                    GameFlag = false;
+                    TouchFlag = false;
                     comboFlag = true;
                     combo = 0;
                     SearchBead();
@@ -422,27 +422,29 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     //畫出珠子
     private void DrawBead() {
         Log.i("Draw","Draw....");
-        Canvas canvas = holder.lockCanvas();
-        canvas.drawColor(Color.BLACK);
-        for(int i=0;i<size_x;i++)
-            for (int j=0;j<size_y;j++) {
-                beads[i][j].drawBackground(canvas);
-        }
-        for(int i=0;i<size_x;i++)
-            for (int j=0;j<size_y;j++) {
+        if(GameFlag) {
+            Canvas canvas = holder.lockCanvas();
+            canvas.drawColor(Color.BLACK);
+            for (int i = 0; i < size_x; i++)
+                for (int j = 0; j < size_y; j++) {
+                    beads[i][j].drawBackground(canvas);
+                }
+            for (int i = 0; i < size_x; i++)
+                for (int j = 0; j < size_y; j++) {
 
-                beads[i][j].draw(canvas);
+                    beads[i][j].draw(canvas);
+                }
+
+            if (comboFlag) {
+                if (combo >= 10)
+                    canvas.drawBitmap(bitmap_combo_left, comboX - BitmapSize * 2, comboY, null);
+
+                canvas.drawBitmap(bitmap_combo_mid, comboX - BitmapSize, comboY, null);
+                canvas.drawBitmap(bitmap_combo_right, comboX, comboY, null);
             }
 
-        if(comboFlag) {
-            if(combo >= 10)
-                canvas.drawBitmap(bitmap_combo_left, comboX-BitmapSize*2, comboY, null);
-
-            canvas.drawBitmap(bitmap_combo_mid, comboX-BitmapSize,comboY , null);
-            canvas.drawBitmap(bitmap_combo_right, comboX, comboY, null);
+            holder.unlockCanvasAndPost(canvas);
         }
-
-        holder.unlockCanvasAndPost(canvas);
     }
 
     //畫出珠子向下移動
@@ -468,7 +470,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
                 else{
 
                     comboFlag = false;
-                    GameFlag = true;
+                    TouchFlag = true;
                     new Thread(){
                         @Override
                         public void run() {
@@ -541,14 +543,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
         Log.i("gameStart","gameStart");
         mediaPlayer.start();
 
-        GameFlag = true;
+        if(!GameFlag){
+            GameFlag = true;
+            downBead();
+        }
+        TouchFlag = true;
     }
 
     @Override
     public void gamePause() {
         Log.i("gamePause","gamePause");
         mediaPlayer.pause();
-
+        TouchFlag = false;
         GameFlag = false;
     }
 
@@ -556,7 +562,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Gam
     public void gameStop() {
         Log.i("gameStop","gameStop");
         mediaPlayer.stop();
-
+        TouchFlag = false;
         GameFlag = false;
     }
 }

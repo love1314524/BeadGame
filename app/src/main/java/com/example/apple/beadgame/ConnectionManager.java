@@ -60,31 +60,27 @@ public class ConnectionManager {
                 }
 
                 if(object.has("command")) {
-                    if (object.getString("command").equals("start")) {
-                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
-                            action.onStartGame();
-                        }
-                        return;
-                    }
-
-                    else if (object.getString("command").equals("end")) {
-                        for (GameActionsListener action : gameActionsListenerListenerList) {
-                            action.onGameEnd();
-                        }
-                        return;
-                    }
-
-                    else if (object.getString("command").equals("leave")) {
-                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
-                            action.roomClose();
-                        }
-                        return;
-                    }
-                    else if (object.getString("command").equals("join")) {
-                        for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
-                            action.enemyJoin(object.getString("player"));
-                        }
-                        return;
+                    switch (object.getString("command")) {
+                        case "start":
+                            for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                                action.onStartGame();
+                            }
+                            return;
+                        case "end":
+                            for (GameActionsListener action : gameActionsListenerListenerList) {
+                                action.onGameEnd();
+                            }
+                            return;
+                        case "leave":
+                            for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                                action.roomClose();
+                            }
+                            return;
+                        case "join":
+                            for (WaitRoomActionsListener action : waitRoomActionsListenerList) {
+                                action.enemyJoin(object.getString("player"));
+                            }
+                            return;
                     }
                 }
 
@@ -262,20 +258,24 @@ public class ConnectionManager {
                             connection.setRequestMethod("POST");
                             connection.getOutputStream().write(object.toString().getBytes());
                             String result = streamToString(connection.getInputStream());
-                            if(result.equals("success")){
-                                ServerConnection.this.roomId = roomId;
-                                client.subscribe(mqttTopic + roomId, 0, roomMessageListener);
-                                if (callback != null) {
-                                    callback.onSuccess();
-                                }
-                            } else if (result.equals("full")) {
-                                if (callback != null) {
-                                    callback.onFailure(new Exception("room is full"));
-                                }
-                            } else {
-                                if (callback != null) {
-                                    callback.onFailure(new Exception("undefine error"));
-                                }
+                            switch (result) {
+                                case "success":
+                                    ServerConnection.this.roomId = roomId;
+                                    client.subscribe(mqttTopic + roomId, 2, roomMessageListener);
+                                    if (callback != null) {
+                                        callback.onSuccess();
+                                    }
+                                    break;
+                                case "full":
+                                    if (callback != null) {
+                                        callback.onFailure(new Exception("room is full"));
+                                    }
+                                    break;
+                                default:
+                                    if (callback != null) {
+                                        callback.onFailure(new Exception("undefine error"));
+                                    }
+                                    break;
                             }
                         } catch (JSONException | MqttException | IOException e) {
                             if (callback != null) {
@@ -311,7 +311,7 @@ public class ConnectionManager {
                             String result = streamToString(connection.getInputStream());
                             if(result.equals("success")){
                                 roomId = playerId;
-                                client.subscribe(mqttTopic + roomId, 0, roomMessageListener);
+                                client.subscribe(mqttTopic + roomId, 2, roomMessageListener);
                                 if (callback != null) {
                                     callback.onSuccess();
                                 }

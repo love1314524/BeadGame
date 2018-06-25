@@ -1,11 +1,8 @@
 package com.example.apple.beadgame;
 
 import android.content.Context;
-import android.net.Network;
 
 import com.example.apple.beadgame.CatEnemy.EnemyShrimp;
-
-import java.sql.Connection;
 
 public class NetworkGamer implements Gamer {
     private NetworkGame.GameHandler gameHandler;

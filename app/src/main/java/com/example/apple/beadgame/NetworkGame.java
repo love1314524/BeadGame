@@ -60,7 +60,7 @@ public class NetworkGame extends CatGame {
         gameClear = false;
         gameOver = false;
         Bitmap a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.red);
-        int w = 400;
+        int w = (int)(gameManager.getWidth() * 0.3f);
         gameManager.regist(myCastle = new Castle(
                 a,
                 1000,
@@ -77,13 +77,12 @@ public class NetworkGame extends CatGame {
                                 NetworkGame.this.gameManager.getWidth() / 2 - 60,
                                 NetworkGame.this.gameManager.getHeight() / 2 ,
                                 20));
-                        NetworkGame.this.gameManager.pauseGame();
                         gameOver = true;
                         onGameEnd("GAME OVER", true);
                     }
                 }));
         a = BitmapFactory.decodeResource(gameManager.getContext().getResources(), R.drawable.blue);
-        w = (int)(gameManager.getHeight() * ((float)a.getWidth() / a.getHeight()));
+        w = (int)(gameManager.getWidth() * 0.3f);
         gameManager.regist(enemyCastle = new Castle(
                 a,
                 1000,
@@ -100,7 +99,6 @@ public class NetworkGame extends CatGame {
                                 NetworkGame.this.gameManager.getWidth() /  2 - 60,
                                 NetworkGame.this.gameManager.getHeight() / 2,
                                 20));
-                        NetworkGame.this.gameManager.pauseGame();
                         gameClear = true;
                         onGameEnd("Victory", true);
                     }
@@ -130,6 +128,7 @@ public class NetworkGame extends CatGame {
                     dlgAlert.setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
                         public void onDismiss(DialogInterface dialogInterface) {
+                            gamePause();
                             activity.finish();
                         }
                     });
@@ -140,4 +139,3 @@ public class NetworkGame extends CatGame {
         }
     }
 }
-
